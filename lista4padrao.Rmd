@@ -1,0 +1,53 @@
+---
+title: "Lista 4: Teoria de Vis"
+author: "Insira seu nome aqui"
+date: "05/05/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Problema 1: The Economist
+
+Crie o último gráfico do link https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html. Este é um gráfico que apresenta uma relação entre o IDH x IPC entre diversos países.
+
+**Resposta:**
+
+```{r}
+
+```
+
+# Problema 2: Minard
+
+Reproduza o gráfico de Minard que representa a jornada do lider político Napoleão ao levar seu exército para a Campanha Russa. O tutorial se encontra em https://www.andrewheiss.com/blog/2017/08/10/exploring-minards-1812-plot-with-ggplot2/.
+
+**Resposta:**
+
+```{r}
+
+```
+
+
+# Problema 3: Gapminder
+
+Faça a animação presente em https://towardsdatascience.com/how-to-build-animated-charts-like-hans-rosling-doing-it-all-in-r-570efc6ba382 seguindo os passos lá descritos.
+
+**Resposta:**
+
+```{r}
+
+```
+
+# Problema 4: Atirei o pau no gráfico
+
+Assista o vídeo https://www.youtube.com/watch?v=CJkzf4IZRuk em que o autor realiza um gráfico em Excel. Seguindo os mesmos passos, faça esse gráfico em R.
+
+**Resposta:**
+
+```{r}
+
+```
+
