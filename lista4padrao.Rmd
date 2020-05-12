@@ -202,7 +202,7 @@ Tendo o gráfico de temperatura, vamos juntar os gráficos com `grid`:
 
 ```{r, warning=FALSE}
 both.1812.plot <- rbind(ggplotGrob(march.1812.plot),
-                        ggplotGrob(temps.1812.plot))
+                        ggplotGrob(temps.1812.plot), size="last")
 
 grid::grid.newpage()
 grid::grid.draw(both.1812.plot)
@@ -261,7 +261,7 @@ temps.1812.plot <- ggplot(data = temps.nice, aes(x = long, y = temp)) +
 
 # Juntando os gráficos.
 both.1812.plot.simple <- rbind(ggplotGrob(march.1812.plot.simple),
-                               ggplotGrob(temps.1812.plot))
+                               ggplotGrob(temps.1812.plot), size="last")
 
 # Arrumando novamente a distribuição dos painéis.
 panels <- both.1812.plot.simple$layout$t[grep("panel", both.1812.plot.simple$layout$name)]
