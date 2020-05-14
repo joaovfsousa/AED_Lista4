@@ -1,8 +1,9 @@
 ---
-title: "Lista 4: Teoria de Vis"
-author: "Insira seu nome aqui"
+title: 'Lista 4: Teoria de Vis'
+author: "João Vitor Freitas Sousa"
 date: "05/05/2020"
-output: html_document
+output:
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -10,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(echo = TRUE,
                       fig.retina = 2,
                       tidy.opts=list(width.cutoff = 120),
-                      options(width = 120))
+                      options(width = 120, scipen = 1000))
 library(tidyverse)
 library(lubridate)
 library(ggmap)
@@ -21,7 +22,6 @@ library(xlsx)
 library(devtools)
 library(RCurl)
 library(httr)
-set_config( config( ssl_verifypeer = 0L ) )
 library(reshape)
 library(gapminder)
 library(dplyr)
@@ -101,8 +101,8 @@ Algumas labels estão "camufladas" por outros pontos ou por outras labels, vamos
                    force = 10))
 ```
 
-Vamos agora modificar as legendas e a escala de cor dos pontos. 
-Começamos renomeando as regiões que aparecem para que fiquem como no gráfico original: 
+Vamos agora modificar as legendas e a escala de cor dos pontos.
+Começamos renomeando as regiões que aparecem para que fiquem como no gráfico original:
 
 ```{r}
 dat$Region <- factor(dat$Region,
@@ -153,18 +153,18 @@ Vamos fazer agora alguns ajustes no "tema" do gráfico, criando na realidade um 
 Vamos mudar a posição da legenda, mudar a maneira como o grid de fundo que representa os eixos é representado e a posição do título.
 
 ```{r}
-library(grid) 
+library(grid)
 (pc6 <- pc5 +
   theme_minimal()+
   theme(text = element_text(color = "gray20"),
-        legend.position = c("top"),  
+        legend.position = c("top"),
         legend.direction = "horizontal",
-        legend.justification = 0.1, 
+        legend.justification = 0.1,
         legend.text = element_text(size = 11, color = "gray10"),
         axis.text = element_text(face = "italic"),
-        axis.title.x = element_text(vjust = -1), 
-        axis.title.y = element_text(vjust = 2), 
-        axis.ticks.y = element_blank(), 
+        axis.title.x = element_text(vjust = -1),
+        axis.title.y = element_text(vjust = 2),
+        axis.ticks.y = element_blank(),
         axis.line = element_line(color = "gray40", size = 0.5),
         axis.line.y = element_blank(),
         panel.grid.major = element_line(color = "gray50", size = 0.5),
@@ -357,7 +357,7 @@ ggplot() +
   geom_point(data = cities, aes(x = long, y = lat),
              color = "#DC5B44") +
   geom_text_repel(data = cities, aes(x = long, y = lat, label = city),
-                  color = "#DC5B44", family = "Open Sans Condensed Bold") +
+                  color = "#DC5B44") +
   scale_size(range = c(0.5, 15)) +
   scale_colour_manual(values = c("#DFC17E", "#252523")) +
   labs(x = NULL, y = NULL) +
@@ -402,7 +402,7 @@ march.1812.plot <- ggmap(march.1812.ne.europe.map) +
   geom_point(data = cities, aes(x = long, y = lat),
              color = "#DC5B44") +
   geom_text_repel(data = cities, aes(x = long, y = lat, label = city),
-                  color = "#DC5B44", family = "Open Sans Condensed Bold") +
+                  color = "#DC5B44") +
   scale_size(range = c(0.5, 10)) +
   scale_colour_manual(values = c("#DFC17E", "#252523")) +
   guides(color = FALSE, size = FALSE) +
@@ -430,12 +430,11 @@ temps.nice <- temps %>%
 temps.1812.plot <- ggplot(data = temps.nice, aes(x = long, y = temp)) +
   geom_line() +
   geom_label(aes(label = nice.label),
-            family = "Open Sans Condensed Bold", size = 2.5) +
+             size = 2.5) +
   labs(x = NULL, y = "° Celsius") +
   scale_x_continuous(limits = ggplot_build(march.1812.plot)$layout$panel_ranges[[1]]$x.range) +
   scale_y_continuous(position = "right") +
   coord_cartesian(ylim = c(-35, 5)) +  # Add some space above/below
-  theme_bw(base_family = "Open Sans Condensed Light") +
   theme(panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
         panel.grid.minor.y = element_blank(),
@@ -484,7 +483,7 @@ march.1812.plot.simple <- ggplot() +
   geom_point(data = cities, aes(x = long, y = lat),
              color = "#DC5B44") +
   geom_text_repel(data = cities, aes(x = long, y = lat, label = city),
-                  color = "#DC5B44", family = "Open Sans Condensed Bold") +
+                  color = "#DC5B44") +
   scale_size(range = c(0.5, 10)) +
   scale_colour_manual(values = c("#DFC17E", "#252523")) +
   guides(color = FALSE, size = FALSE) +
@@ -494,12 +493,11 @@ march.1812.plot.simple <- ggplot() +
 temps.1812.plot <- ggplot(data = temps.nice, aes(x = long, y = temp)) +
   geom_line() +
   geom_label(aes(label = nice.label),
-            family = "Open Sans Condensed Bold", size = 2.5) +
+             size = 2.5) +
   labs(x = NULL, y = "° Celsius") +
   scale_x_continuous(limits = ggplot_build(march.1812.plot.simple)$layout$panel_ranges[[1]]$x.range) +
   scale_y_continuous(position = "right") +
   coord_cartesian(ylim = c(-35, 5)) +  # Add some space above/below
-  theme_bw(base_family = "Open Sans Condensed Light") +
   theme(panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank(),
         panel.grid.minor.y = element_blank(),
@@ -624,7 +622,103 @@ Assista o vídeo https://www.youtube.com/watch?v=CJkzf4IZRuk em que o autor real
 
 **Resposta:**
 
-```{r}
+Vamos começar importando as tabelas.
 
+```{r}
+covid <- read.xlsx("./4/dados.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
+covid <- data.frame(date = covid$data, obitos = covid$obitosAcumulado)
 ```
+
+``````{r, fig.width=14, fig.height=9}
+obitos <- covid$obitos
+obitos <- obitos[obitos != 0]
+obitos_help <- c(0 ,obitos)
+obitos <- c(obitos, 0)
+
+taxa <- obitos / obitos_help
+taxa[taxa == Inf] <- 0
+
+full <- cbind(data.frame(obitos, taxa)[-c(58),], date = ymd(covid$date[covid$obitos != 0]))
+
+newdf <- full[full$date >= "2020-03-27",]
+
+
+
+ylim.ob <- c(min(newdf$obitos), max(newdf$obitos))  
+ylim.tax <- c(min(newdf$taxa), max(newdf$taxa))
+
+
+
+unlog <- function(x) {
+  sup <- c()
+  for(i in x){
+    sup <- c(sup, 10^i)
+  }
+  sup
+}
+
+newRange <- function(x, y) {
+  oldMax <- max(x)
+  oldMin <- min(x)
+  newMax <- max(y)
+  newMin <- min(y)
+  oldValue <- x
+  newValue <- 
+    oldRange <-  (oldMax - oldMin)  
+  newRange <-  (newMax - newMin)  
+  newValue = (((oldValue - oldMin) * newRange) / oldRange) + newMin
+}
+
+newdf$taxa <- unlog(newdf$taxa)
+
+newdf$taxa <- newRange(newdf$taxa, newdf$obitos)
+
+colors <- c("Obitos" = "Blue", "Taxa" = "Orange")
+
+ggplot(newdf, aes(x = date, y = obitos, color = "Obitos")) +
+  geom_line(size = 2) +
+  geom_point(size = 4) +
+  geom_line(aes(y = taxa/10 + 10, color = "Taxa"), size = 2) +
+  geom_point(aes(y = taxa/10 + 10, color = "Taxa"), size = 4) +
+  scale_y_continuous(name = "Óbitos",trans = "log10", limits = c(1, 13000), breaks = c(1, 10, 100, 1000, 10000), sec.axis = sec_axis(~. / 100, name = "Taxa de crescimento", breaks = c(0.01, 0.0323, 0.1, 0.325, 1, 3.245, 10, 32.4, 100), labels = c(0.9, 0.95, 1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.30))) +
+  scale_x_date(name = 'Data', date_breaks = "1 day") +
+  labs(color = "Legenda") +
+  ggtitle("Óbitos COVID-19 no Brasil", ) +
+  scale_color_manual(values = colors) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position="right") 
+```
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
