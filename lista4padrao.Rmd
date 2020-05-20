@@ -33,11 +33,11 @@ library(grid)
 
 # Problema 1: The Economist
 
-Crie o último gráfico do link https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html. Este é um gráfico que apresenta uma relação entre o IDH x IPC entre diversos países.
+Crie o último gráfico do link [https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html]. Este é um gráfico que apresenta uma relação entre o IDH x IPC entre diversos países.
 
 **Resposta:**
 
-Vamos começar importando os dados baixados no link citado acima e vamos plotar de forma basica os dados que vamos representar no gráfico final utilizando `ggplot`.
+Vamos começar importando os dados baixados no link citado acima e vamos plotar de forma básica os dados que vamos representar no gráfico final utilizando `ggplot`.
 
 ```{r, message=FALSE}
 dat <- read_csv("./1/EconomistData.csv")
@@ -518,52 +518,55 @@ Pronto!
 
 # Problema 3: Gapminder
 
-Faça a animação presente em https://towardsdatascience.com/how-to-build-animated-charts-like-hans-rosling-doing-it-all-in-r-570efc6ba382 seguindo os passos lá descritos.
+Faça a animação presente em [https://towardsdatascience.com/how-to-build-animated-charts-like-hans-rosling-doing-it-all-in-r-570efc6ba382] seguindo os passos lá descritos.
 
 **Resposta:**
 
 Vamos começar lendo os dados baixados.
 
-```{r}
+```{r, warning=FALSE}
 population_xls <- read.xlsx("./3/indicator gapminder population.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
 fertility_xls <- read.xlsx("./3/indicator undata total_fertility.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
-lifeexp_xls <- read.xlsx("./3/indicator life_expectancy_at_birth.xlsx", encoding = "UTF-8", stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
+lifeexp_xls <- read.xlsx("./3/indicator life_expectancy_at_birth.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
 ```
 
+Como os scripts passados são muito grandes, irei comentar sua execução dentro do código.
+Primeira parte, a manipulação dos dados.
+
 ```{r}
-# Create a variable to keep only years 1962 to 2015
+# Cria uma variável que será usada para filtrar os dados nas linhas a seguir
 myvars <- paste("X", 1962:2015, sep="")
-# Create 3 data frame with only years 1962 to 2015
+# Gera novos dataframes somente com os anos desejados.
 population <- population_xls[c('Total.population',myvars)]
 fertility <- fertility_xls[c('Total.fertility.rate',myvars)]
 lifeexp <- lifeexp_xls[c('Life.expectancy',myvars)]
-# Rename the first column as "Country"
+# Renomeia a primeira coluna dos dataframes com "Country"
 colnames(population)[1] <- "Country"
 colnames(fertility)[1] <- "Country"
 colnames(lifeexp)[1] <- "Country"
-# Remove empty lines that were created keeping only 275 countries
+# Remove linhas vazias no final do dataframe
 lifeexp <- lifeexp[1:275,]
 population <- population[1:275,]
-# Use reshape library to move the year dimension as a column
+# Transforma os dataframes trazendo os anos como coluna 
 population_m <- melt(population, id=c("Country"))
 lifeexp_m <- melt(lifeexp, id=c("Country"))
 fertility_m <- melt(fertility, id=c("Country"))
-# Give a different name to each KPI (e.g. pop, life, fert)
+# Renomeia a coluna que mantem os dados
 colnames(population_m)[3] <- "pop"
 colnames(lifeexp_m)[3] <- "life"
 colnames(fertility_m)[3] <- "fert"
-# Merge the 3 data frames into one
+# Unifica os dataframes
 mydf <- merge(lifeexp_m, fertility_m, by=c("Country","variable"), header =T)
 mydf <- merge(mydf, population_m, by=c("Country","variable"), header =T)
-# The only piece of the puzzle missing is the continent name for each country for the color - use gapminder library to bring it
+# Usando o gapminder para criar um lista com os continentes de cada país do dataframe
 continent <- gapminder %>% group_by(continent, country) %>% distinct(country, continent)
 continent <- data.frame(lapply(continent, as.character), stringsAsFactors=FALSE)
 colnames(continent)[1] <- "Country"
-# Filter out all countries that do not exist in the continent table
+# Retira os paises que não estão presentes na tabela de continentes
 mydf_filter <- mydf %>% filter(Country %in% unique(continent$Country))
-# Add the continent column to finalize the data set
+# E finalmente adiciona a coluna continentes ao dataframe
 mydf_filter <- merge(mydf_filter, continent, by=c("Country"), header =T)
-# Do some extra cleaning (e.g. remove N/A lines, remove factors, and convert KPIs into numerical values)
+#Remove as linhas com valores "N/A", retorna as strings para o formato "character" e converte os dados para o formato numérico.
 mydf_filter[is.na(mydf_filter)] <- 0
 mydf_filter <- data.frame(lapply(mydf_filter, as.character), stringsAsFactors=FALSE)
 mydf_filter$variable <- as.integer(as.character(gsub("X","",mydf_filter$variable)))
@@ -572,39 +575,36 @@ mydf_filter$pop <- round(as.numeric(as.character(mydf_filter$pop))/1000000,1)
 mydf_filter$fert <- as.numeric(as.character(mydf_filter$fert))
 mydf_filter$life <- as.numeric(as.character(mydf_filter$life))
 ```
-
+Segunda parte, a criação do gráfico com o ggplot:
 ```{r, warning=FALSE}
-# Add a global theme
+# Criação de um tema global para o ggplot
 theme_set(theme_grey()+ theme(legend.box.background = element_rect(),legend.box.margin = margin(6, 6, 6, 6)) )
-# OLD VERSION
-# Create the plot with years as frame, limiting y axis from 30 years to 100
-# p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = variable)) +
-#  geom_point()+ ylim(30,100)  + labs(x="Fertility Rate", y = "Life expectancy at birth (years)", caption = "(Based on data from Hans Rosling - gapminder.com)", color = 'Continent',size = "Population (millions)") +
-#  scale_color_brewer(type = 'div', palette = 'Spectral')
-# gganimate(p, interval = .2, "output.gif")
-# NEW VERSION
-# Create the plot with years as frame, limiting y axis from 30 years to 100
+# Cria um gráfico com o ano como frame , eixo x sendo a taxa de fertilidade, eixo y sendo a expectativa de vida e o tamanho dos pontos sendo o tamanho da população. Há também ajustes gráficos, como a configuração dos limites do eixo y.
 p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = year)) +
   labs(x="Fertility Rate", y = "Life expectancy at birth (years)", caption = "(Based on data from Hans Rosling - gapminder.com)", color = 'Continent',size = "Population (millions)") +
   ylim(30,100) +
   geom_point() +
   scale_color_brewer(type = 'div', palette = 'Spectral') +
-  # gganimate code
+  # Criação da animação definindo título, a unidade que determinara a transição de frames e a forma como será feita(linear).
   ggtitle("Year: {frame_time}") +
   transition_time(year) +
   ease_aes("linear") +
   enter_fade() +
   exit_fade()
-# animate
-#animate(p, width = 450, height = 450)
+# Comando que gera a animação.
 animate(p, width = 900, height = 900, nframes = 100, fps = 8, end_pause = 32,renderer=gifski_renderer("save.gif"))
 ```
 
+Agora criando o gráfico interativo com o `plotly`.
+
 ```{r, warning=FALSE, message=FALSE}
+# A estrutura do gráfico é feita em ggplot, assim como no chunk acima
 p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = year)) +
   geom_point()+ ylim(30,100)  + labs(x="Fertility Rate", y = "Life expectancy at birth (years)", color = 'Continent',size = "Population (millions)") +
   scale_color_brewer(type = 'div', palette = 'Spectral')
-# Generate the Visual and a HTML output
+
+# Utilizando o gráfico gerado acima, cria o interativo
+
 ggp <- ggplotly(p, height = 900, width = 900) %>%
   animation_opts(frame = 100,
                  easing = "linear",
@@ -615,33 +615,37 @@ htmlwidgets::saveWidget(ggp, "index.html")
 
 # Problema 4: Atirei o pau no gráfico
 
-Assista o vídeo https://www.youtube.com/watch?v=CJkzf4IZRuk em que o autor realiza um gráfico em Excel. Seguindo os mesmos passos, faça esse gráfico em R.
+Assista o vídeo [https://www.youtube.com/watch?v=CJkzf4IZRuk] em que o autor realiza um gráfico em Excel. Seguindo os mesmos passos, faça esse gráfico em R.
 
 **Resposta:**
 
-Vamos começar importando as tabelas.
+Vamos começar importando a tabela baixada no painel oficial do covid e já criando um dataframe somente com os dados que usarei para replicar.
 
-```{r, warning=False, echo=False, error=False}
+```{r, warning=FALSE, error=FALSE}
 covid <- read.xlsx("./4/dados.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
 covid <- data.frame(date = covid$data, obitos = covid$obitosAcumulado)
 ```
 
-```{r, warning = False}
+Como escrevi o código em um único chunk vou novamente comentar dentro desse chunk. 
+O primeiro diz respeito a gráfico dos 14 minutos, que representa a quantidade de óbitos em escala logarítmica.
+
+```{r, warning = FALSE, message= FALSE}
+# Aqui é feita a remoção das linhas cujos número de óbitos é 0 e a criação de um vetor que auxiliará no cálculo da taxa.
 obitos <- covid$obitos
 obitos <- obitos[obitos != 0]
 obitos_help <- c(0 ,obitos)
 obitos <- c(obitos, 0)
-
+# Cálculo da taxa
 taxa <- obitos / obitos_help
 taxa[taxa == Inf] <- 0
-
+# Criação de um dataframe com as datas, os óbitos e as taxas já calculadas.
 full <- cbind(data.frame(obitos, taxa)[-c(58),], date = ymd(covid$date[covid$obitos != 0]))
-
+# Filtragem desse dataframe para as datas utilizadas no video.
 newdf <- full[full$date >= "2020-03-27" & full$date <= "2020-04-14",]
-
+# Criação dos estilos a serem utilizados no gráfico, as listas a seguir dizem respeito respectivamente ao eixo principal(em escala logarítmica) que está ligado aos óbitos e ao eixo secundário(em escala linear) que está ligado a taxa de crescimento.
 style.atirei1y1 <- list(
   autotick = FALSE,
-  type = "log",
+  type = "log", # Transforma o eixo para a escala logarítmica
   ticks = "outside",
   tick0 = 10,
   tickwidth = 2,
@@ -659,18 +663,35 @@ style.atirei1y2 <- list(
   side = "right",
   overlaying = "y"
 )
-
+# Utilizando o plotly, defini um gráfico com eixo x sendo as datas.
 atirei1 <- plot_ly(x = ~newdf$date)
+# Adicionando a linha de óbitos.
 atirei1 <- atirei1 %>% add_trace(y = ~newdf$obitos, name = "Óbitos", mode = "lines+markers", line = list(shape = "spline", width = 2))
+# Adicionando a linha de taxa de crescimento e a ligando ao eixo secundário(yaxis = "y2"), assim a mesma se manterá em escala linear
 atirei1 <- atirei1 %>% add_trace(y =  ~newdf$taxa, name = "Taxa de crescimento", mode = "lines+markers", line = list(width = 2), yaxis = "y2")
+# Aplicação dos estilos citados acima, adição do título, movimentação da legenda para a parte inferior.
 atirei1 <- atirei1 %>% layout(xaxis = list(title = ""),yaxis = style.atirei1y1, yaxis2 = style.atirei1y2, title = "Óbitos COVID-19 no Brasil",legend = list(orientation = "h"), margin = list(r = 50))
-
+# Exibição do gráfico
 atirei1
 ```
 
+Reconstrução da tabela de previsão de número de óbitos: 
 
+```{r, warning = FALSE, message=FALSE}
+# Criando o vetor da soma acumulada dos desvios.
+media <- 1.1
+somaaculmulada <- newdf$taxa - media
+# Plotando a soma e assim verificando a média.
+soma <- plot_ly(x = ~newdf$date)
+soma <- soma %>% add_trace(y = ~somaaculmulada, name = "Soma", mode = "lines+markers")
+soma <- soma %>% layout(yaxis = list(tick0 = -1, dtick = 0.1, ticklen = 1))
+soma
+```
+
+Agora a tabela de previsão:
 
 ```{r}
+# Função para gerar a previsão dos óbitos com base na taxa de crescimento média
 simulacrescimento <- function(taxa, valor_inicial, dias){
   sup <- c()
   for(i in 1:dias){
@@ -678,28 +699,25 @@ simulacrescimento <- function(taxa, valor_inicial, dias){
   }
   sup
 }
-
-media <- 1.1
-somaaculmulada <- newdf$taxa - media
-
-soma <- plot_ly(x = ~newdf$date)
-soma <- soma %>% add_trace(y = ~somaaculmulada, name = "Soma", mode = "lines+markers")
-soma <- soma %>% layout(yaxis = list(tick0 = -1, dtick = 0.1, ticklen = 1))
-#soma
-
-
+# Preparando as datas a serem adicionadas no dataframe(restante do mês de abril)
 newdates <- seq(as.Date("2020-04-15"), as.Date("2020-04-30"), by="days")
 newdates <- c(newdf$date, newdates)
-
+# Contagem dos dias que foram adicionados
 diasadicionados <- length(newdates) - length(newdf$date)
-  
-taxa <-  rep(1.1, times = 16)
+# Preparando as taxas a serem adicionadas no dataframe(supondo 1.1 no restante do mês de abril)
+taxa <-  rep(1.1, times = diasadicionados)
 newtaxa <- c(newdf$taxa, taxa)
-
+# Criação do vetor com os óbitos já registrados e com a previsão.
 newobitos <- c(newdf$obitos, simulacrescimento(media, tail(newdf$obitos, n = 1), diasadicionados))
+# União das novas unidades em um dataframe.
+tabela <- data.frame(Data = newdates, obitos = newobitos, taxa = newtaxa)
 
-
+knitr::kable(tabela)
 ```
+
+A previsão feita diz 7039 óbitos até o final do mês de abril. Isso nos mostra que essa taxa na realidade abaixou de 1.1, no final de abril foram registrados pelas secretárias estaduais de saúde 5912 óbitos.
+
+
   
   
     
