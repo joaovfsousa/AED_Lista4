@@ -1,7 +1,7 @@
 ---
-title: 'Lista 4: Teoria de Vis'
+title: 'Lista 5: Modificação da lista 4'
 author: "João Vitor Freitas Sousa"
-date: "05/05/2020"
+date: "25/05/2020"
 output:
   html_document: default
 ---
@@ -37,74 +37,21 @@ Crie o último gráfico do link [https://tutorials.iq.harvard.edu/R/Rgraphics/Rg
 
 **Resposta:**
 
-Vamos começar importando os dados baixados no link citado acima e vamos plotar de forma básica os dados que vamos representar no gráfico final utilizando `ggplot`.
+Dados os conceitos passados nas últimas aulas, considerei válido alterar a escala de cor utilizando agora uma retirada do ColorBrewer com configurações divergentes. Considerei também retirar os países que estão sem as labels, visto que assim o gráfico fica menos poluído e aumenta a velocidade de interpretação do mesmo.
 
-```{r, message=FALSE}
+Primeiro então a importação dos dados e a manipulação.
+
+```{r, fig.width=14, fig.height=10, warning=FALSE, message=FALSE}
 dat <- read_csv("./1/EconomistData.csv")
-
-pc1 <- ggplot(dat, aes(x = CPI, y = HDI, color = Region))
-pc1 + geom_point()
-```
-
-Vamos adicionar então a linha de tendência presente no gráfico original utilizando o `geom_smooth`.
-
-```{r}
-pc2 <- pc1 +
-  geom_smooth(mapping = aes(linetype = "r2"),
-              method = "lm",
-              formula = y ~ x + log(x), se = FALSE,
-              color = "red")
-pc2 + geom_point()
-```
-
-Observando o gráfico original percebe-se que tal usa "pontos furados", vamos então alterar a forma que utilizamos no `geom_point`.
-
-```{r}
-pc2 +
-  geom_point(shape = 1, size = 4)
-```
-
-Consertando o tamanho e a espessura das circunferências:
-
-```{r}
-(pc3 <- pc2 + geom_point(shape = 1, size = 2.5, stroke = 1.25))
-```
-
-Agora vamos trabalhar nas labels de alguns pontos, os mesmos que aparecem no gráfico original. Na base de dados que temos esses dados não estão separados, vamos então separá-los manualmente:
-
-```{r}
 pointsToLabel <- c("Russia", "Venezuela", "Iraq", "Myanmar", "Sudan",
                    "Afghanistan", "Congo", "Greece", "Argentina", "Brazil",
                    "India", "Italy", "China", "South Africa", "Spane",
                    "Botswana", "Cape Verde", "Bhutan", "Rwanda", "France",
                    "United States", "Germany", "Britain", "Barbados", "Norway", "Japan",
                    "New Zealand", "Singapore")
-```
 
-Aplicando `geom_text`, vamos adicionar as labels:
+dat <- dat[dat$Country %in% pointsToLabel,] # Filtro dos países
 
-```{r}
-(pc4 <- pc3 +
-  geom_text(aes(label = Country),
-            color = "gray20",
-            data = filter(dat, Country %in% pointsToLabel)))
-```
-
-
-Algumas labels estão "camufladas" por outros pontos ou por outras labels, vamos então utilizar a biblioteca `ggrepel` para gerar as labels:
-
-```{r}
-(pc4 <- pc3 +
-   geom_text_repel(aes(label = Country),
-                   color = "gray20",
-                   data = filter(dat, Country %in% pointsToLabel),
-                   force = 10))
-```
-
-Vamos agora modificar as legendas e a escala de cor dos pontos.
-Começamos renomeando as regiões que aparecem para que fiquem como no gráfico original:
-
-```{r}
 dat$Region <- factor(dat$Region,
                      levels = c("EU W. Europe",
                                 "Americas",
@@ -119,83 +66,15 @@ dat$Region <- factor(dat$Region,
                                 "Middle East &\nnorth Africa",
                                 "Sub-Saharan\nAfrica"))
 
-```
-
-Aplicando os novos dados ao gráfico e plotando novamente:
-
-```{r}
-pc4$data <- dat
-pc4
-```
-
-Vamos então adicionar o título modificar os eixos utilizando o sistema de  `scales` do ggplot2 para cada eixo e para as cores.
-
-```{r}
-(pc5 <- pc4 +
-  scale_x_continuous(name = "Corruption Perceptions Index, 2011 (10=least corrupt)",
-                     limits = c(.9, 10.5),
-                     breaks = 1:10) +
-  scale_y_continuous(name = "Human Development Index, 2011 (1=Best)",
-                     limits = c(0.2, 1.0),
-                     breaks = seq(0.2, 1.0, by = 0.1)) +
-  scale_color_manual(name = "",
-                     values = c("#24576D",
-                                "#099DD7",
-                                "#28AADC",
-                                "#248E84",
-                                "#F2583F",
-                                "#96503F")) +
-  ggtitle("Corruption and Human development"))
-
-```
-
-Vamos fazer agora alguns ajustes no "tema" do gráfico, criando na realidade um tema básico e fazendo as alterações desejadas manualmente.
-Vamos mudar a posição da legenda, mudar a maneira como o grid de fundo que representa os eixos é representado e a posição do título.
-
-```{r}
-library(grid)
-(pc6 <- pc5 +
-  theme_minimal()+
-  theme(text = element_text(color = "gray20"),
-        legend.position = c("top"),
-        legend.direction = "horizontal",
-        legend.justification = 0.1,
-        legend.text = element_text(size = 11, color = "gray10"),
-        axis.text = element_text(face = "italic"),
-        axis.title.x = element_text(vjust = -1),
-        axis.title.y = element_text(vjust = 2),
-        axis.ticks.y = element_blank(),
-        axis.line = element_line(color = "gray40", size = 0.5),
-        axis.line.y = element_blank(),
-        panel.grid.major = element_line(color = "gray50", size = 0.5),
-        panel.grid.major.x = element_blank()
-        ))
-```
-
-Agora nos falta adicionar a fonte e mudar o modelo utilizado na formação da linha de tendência.
-Primeiro adicionamos a fonte:
-
-```{r}
-(pc7 <- pc6 +
-   labs(caption="Sources: Transparency International; UN Human Development Report"))
-```
-
-
-Aqui criamos o novo modelo e a forma com a qual ele aparecerá na legenda e plotamos o gráfico já com o modelo.
-
-```{r, fig.width=9, fig.height=6}
 mR2 <- summary(lm(HDI ~ CPI + log(CPI), data = dat))$r.squared
 mR2 <- paste0(format(mR2, digits = 2), "%")
-(pc8 <- pc7 +
-    scale_linetype(name = "",
-                 breaks = "r2",
-                 labels = list(bquote(R^2==.(mR2))),
-                 guide = guide_legend(override.aes = list(linetype = 1, size = 2, color = "red"), order=2)))
-```
+``` 
 
-Aqui então temos a união dos códigos gerados durante o processo, então o código final:
+Aqui o código que gera o gráfico já com a nova paleta de cores.
 
-```{r, fig.width=14, fig.height=10, warning=FALSE}
+```{r fig.height=10, fig.width=14, message=FALSE, warning=FALSE}
+#newpalette <- c('#d73027','#fc8d59','#fee08b','#d9ef8b','#91cf60','#1a9850')
+newpalette <- c('#d53e4f','#fc8d59','#fee08b','#e6f598','#99d594','#3288bd')
 p <- ggplot(dat,
             mapping = aes(x = CPI, y = HDI)) +
   geom_smooth(mapping = aes(linetype = "r2"),
@@ -206,38 +85,10 @@ p <- ggplot(dat,
              shape = 1,
              size = 4,
              stroke = 1.5) +
-  geom_text_repel(mapping = aes(label = Country, alpha = labels),
-                  color = "gray20",
-                  data = transform(dat,
-                                   labels = Country %in% c("Russia",
-                                                           "Venezuela",
-                                                           "Iraq",
-                                                           "Mayanmar",
-                                                           "Sudan",
-                                                           "Afghanistan",
-                                                           "Congo",
-                                                           "Greece",
-                                                           "Argentinia",
-                                                           "Italy",
-                                                           "Brazil",
-                                                           "India",
-                                                           "China",
-                                                           "South Africa",
-                                                           "Spain",
-                                                           "Cape Verde",
-                                                           "Bhutan",
-                                                           "Rwanda",
-                                                           "France",
-                                                           "Botswana",
-                                                           "France",
-                                                           "US",
-                                                           "Germany",
-                                                           "Britain",
-                                                           "Barbados",
-                                                           "Japan",
-                                                           "Norway",
-                                                           "New Zealand",
-                                                           "Sigapore"))) +
+  geom_text_repel(mapping = aes(label = Country),
+                  data = transform(dat,labels = Country),
+                  force = 4,
+                  direction = c("both")) +
   scale_x_continuous(name = "Corruption Perception Index, 2011 (10=least corrupt)",
                      limits = c(1.0, 10.0),
                      breaks = 1:10) +
@@ -245,15 +96,11 @@ p <- ggplot(dat,
                      limits = c(0.2, 1.0),
                      breaks = seq(0.2, 1.0, by = 0.1)) +
   scale_color_manual(name = "",
-                     values = c("#24576D",
-                                "#099DD7",
-                                "#28AADC",
-                                "#248E84",
-                                "#F2583F",
-                                "#96503F"),
+                     values = newpalette,
                      guide = guide_legend(nrow = 1, order=1)) +
   scale_alpha_discrete(range = c(0, 1),
                        guide = FALSE) +
+  
   scale_linetype(name = "",
                  breaks = "r2",
                  labels = list(bquote(R^2==.(mR2))),
@@ -264,7 +111,7 @@ p <- ggplot(dat,
   theme(panel.border = element_blank(),
         panel.grid = element_blank(),
         panel.grid.major.y = element_line(color = "gray"),
-        text = element_text(color = "gray20"),
+        text = element_text(color = "black"),
         axis.title.x = element_text(face="italic"),
         axis.title.y = element_text(face="italic"),
         legend.position = "top",
@@ -276,478 +123,443 @@ p <- ggplot(dat,
 p
 ```
 
-# Problema 2: Minard
-
-Reproduza o gráfico de Minard que representa a jornada do lider político Napoleão ao levar seu exército para a Campanha Russa. O tutorial se encontra em [https://www.andrewheiss.com/blog/2017/08/10/exploring-minards-1812-plot-with-ggplot2/].
-
-**Resposta:**
-
-Começamos importando os dados baixados e já transformando as datas para o formato padrão do R.
-
-```{r}
-cities <- read.table("./2/cities.txt",
-                     header = TRUE, stringsAsFactors = FALSE)
-
-troops <- read.table("./2/troops.txt",
-                     header = TRUE, stringsAsFactors = FALSE)
-
-temps <- read.table("./2/temps.txt",
-                    header = TRUE, stringsAsFactors = FALSE) %>%
-  mutate(date = dmy(date))
-```
-
-Vamos começar com o gráfico de cima. Dentro da variável `troops` armazenamos os dados relativos ao caminhos traçados por cada grupo. Plotando esses caminhos com o `geom_path()`:
-
-```{r,fig.width=10, fig.height=2.5}
-ggplot(troops, aes(x = long, y = lat, group = group)) +
-  geom_path()
-```
-
-Plotando agora com o diferenciando a quantidade de sobreviventes pela espessura da linha e a direção pela cor:
-
-```{r, fig.width=10, fig.height=2.5}
-ggplot(troops, aes(x = long, y = lat, group = group,
-                   color = direction, size = survivors)) +
-  geom_path(lineend = "round")
-```
-
-Vamos usar o `scale_size()` para transmitir melhor a quantidade de sobreviventes:
-
-```{r, fig.width=10, fig.height=2.5}
-ggplot(troops, aes(x = long, y = lat, group = group,
-                   color = direction, size = survivors)) +
-  geom_path(lineend = "round") +
-  scale_size(range = c(0.5, 15))
-```
-
-Vamos remover a legendas e mudar as cores:
-
-```{r, fig.width=10, fig.height=2.5}
-ggplot(troops, aes(x = long, y = lat, group = group,
-                   color = direction, size = survivors)) +
-  geom_path(lineend = "round") +
-  scale_size(range = c(0.5, 15)) +
-  scale_colour_manual(values = c("#DFC17E", "#252523")) +
-  labs(x = NULL, y = NULL) +
-  guides(color = FALSE, size = FALSE)
-```
-
-Vamos então adicionar as cidades nas quais as tropas passaram no gráfico com o `geom_point()`:
-
-```{r, fig.width=10, fig.height=2.5}
-ggplot() +
-  geom_path(data = troops, aes(x = long, y = lat, group = group,
-                               color = direction, size = survivors),
-            lineend = "round") +
-  geom_point(data = cities, aes(x = long, y = lat)) +
-  geom_text(data = cities, aes(x = long, y = lat, label = city), vjust = 1.5) +
-  scale_size(range = c(0.5, 15)) +
-  scale_colour_manual(values = c("#DFC17E", "#252523")) +
-  labs(x = NULL, y = NULL) +
-  guides(color = FALSE, size = FALSE)
-```
-
-Como os nomes de algumas das cidades ficou em cima da linha preta, vamos utilizar o `geom_textrepel()` para resolver esse problema:
-
-```{r, fig.width=10, fig.height=2.5, warning=FALSE}
-ggplot() +
-  geom_path(data = troops, aes(x = long, y = lat, group = group,
-                               color = direction, size = survivors),
-            lineend = "round") +
-  geom_point(data = cities, aes(x = long, y = lat),
-             color = "#DC5B44") +
-  geom_text_repel(data = cities, aes(x = long, y = lat, label = city),
-                  color = "#DC5B44") +
-  scale_size(range = c(0.5, 15)) +
-  scale_colour_manual(values = c("#DFC17E", "#252523")) +
-  labs(x = NULL, y = NULL) +
-  guides(color = FALSE, size = FALSE)
-```
-
-Vamos agora começar o processo de adicionar um mapa no gráfico, para isso temos que baixar a imagem de fundo:
-
-```{r, message=FALSE}
-march.1812.europe <- c(left = -13.10, bottom = 35.75, right = 41.04, top = 61.86)
-march.1812.europe.map <- get_stamenmap(bbox = march.1812.europe, zoom = 5,
-                                       maptype = "terrain", where = "cache")
-march.1812.europe.map.wc <- get_stamenmap(bbox = march.1812.europe, zoom = 5,
-                                          maptype = "watercolor", where = "cache")
-```
-
-Usando `ggmap` vamos adicionar o mapa de fundo:
-
-```{r, fig.width=10, fig.height=6}
-ggmap(march.1812.europe.map.wc) +
-  geom_path(data = troops, aes(x = long, y = lat, group = group,
-                               color = direction, size = survivors),
-            lineend = "round") +
-  scale_size(range = c(0.5, 5)) +
-  scale_colour_manual(values = c("#DFC17E", "#252523")) +
-  guides(color = FALSE, size = FALSE) +
-  theme_nothing()
-```
-
-Vamos agora dar um zoom no mapa para a região que queremos, mudar o tipo de mapa para "mapa de terreno" e então adicionar o resto dos elementos que já tinhamos:
-
-```{r, message=FALSE, warning=FALSE, fig.width=10, fig.height=4}
-march.1812.ne.europe <- c(left = 23.5, bottom = 53.4, right = 38.1, top = 56.3)
-
-march.1812.ne.europe.map <- get_stamenmap(bbox = march.1812.ne.europe, zoom = 8,
-                                          maptype = "terrain-background", where = "cache")
-
-march.1812.plot <- ggmap(march.1812.ne.europe.map) +
-  geom_path(data = troops, aes(x = long, y = lat, group = group,
-                               color = direction, size = survivors),
-            lineend = "round") +
-  geom_point(data = cities, aes(x = long, y = lat),
-             color = "#DC5B44") +
-  geom_text_repel(data = cities, aes(x = long, y = lat, label = city),
-                  color = "#DC5B44") +
-  scale_size(range = c(0.5, 10)) +
-  scale_colour_manual(values = c("#DFC17E", "#252523")) +
-  guides(color = FALSE, size = FALSE) +
-  theme_nothing()
-
-march.1812.plot
-```
-
-Temos então a parte superior do gráfico final, vamos ao gráfico de temperaturas.
-
-Podemos facilmente gerá-lo com `geom_line()`:
-
-```{r, fig.width=10, fig.height=4}
-ggplot(data = temps, aes(x = long, y = temp)) +
-  geom_line() +
-  geom_text(aes(label = temp), vjust = 1.5)
-```
-
-Melhorando as labels, removendo o grid vertical, movendo o eixo y para a direita e removendo as descrições do eixo x:
-
-```{r, fig.width=10, fig.height=4, warning=FALSE}
-temps.nice <- temps %>%
-  mutate(nice.label = paste0(temp, "°, ", month, ". ", day))
-
-temps.1812.plot <- ggplot(data = temps.nice, aes(x = long, y = temp)) +
-  geom_line() +
-  geom_label(aes(label = nice.label),
-             size = 2.5) +
-  labs(x = NULL, y = "° Celsius") +
-  scale_x_continuous(limits = ggplot_build(march.1812.plot)$layout$panel_ranges[[1]]$x.range) +
-  scale_y_continuous(position = "right") +
-  coord_cartesian(ylim = c(-35, 5)) +  # Add some space above/below
-  theme(panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        axis.text.x = element_blank(), axis.ticks = element_blank(),
-        panel.border = element_blank())
-
-temps.1812.plot
-```
-
-Tendo o gráfico de temperatura, vamos juntar os gráficos com `grid`:
-
-```{r, warning=FALSE}
-both.1812.plot <- rbind(ggplotGrob(march.1812.plot),
-                        ggplotGrob(temps.1812.plot), size="last")
-
-grid::grid.newpage()
-grid::grid.draw(both.1812.plot)
-```
-
-Os gráficos estão alinhados mas temos um problema com as proporções. Vamos resolver modificando manualmente os painéis.
-
-```{r, fig.width=10, fig.height=5.5, warning=FALSE}
-# Identificando os paneis do gráfico
-panels <- both.1812.plot$layout$t[grep("panel", both.1812.plot$layout$name)]
-
-map.panel.height <- both.1812.plot$heights[panels][1]
-
-# Colocando os painéis no gráfico.
-both.1812.plot$heights[panels] <- unit(c(map.panel.height, 0.1), "null")
-
-grid::grid.newpage()
-grid::grid.draw(both.1812.plot)
-```
-
-Vamos gerar agora um gráfico sem o mapa de fundo.
-
-```{r, fig.width=10, fig.height=4.75, warning=FALSE}
-
-march.1812.plot.simple <- ggplot() +
-  geom_path(data = troops, aes(x = long, y = lat, group = group,
-                               color = direction, size = survivors),
-            lineend = "round") +
-  geom_point(data = cities, aes(x = long, y = lat),
-             color = "#DC5B44") +
-  geom_text_repel(data = cities, aes(x = long, y = lat, label = city),
-                  color = "#DC5B44") +
-  scale_size(range = c(0.5, 10)) +
-  scale_colour_manual(values = c("#DFC17E", "#252523")) +
-  guides(color = FALSE, size = FALSE) +
-  theme_nothing()
-
-# Mudanças para que os eixos se coincidam sem o mapa.
-temps.1812.plot <- ggplot(data = temps.nice, aes(x = long, y = temp)) +
-  geom_line() +
-  geom_label(aes(label = nice.label),
-             size = 2.5) +
-  labs(x = NULL, y = "° Celsius") +
-  scale_x_continuous(limits = ggplot_build(march.1812.plot.simple)$layout$panel_ranges[[1]]$x.range) +
-  scale_y_continuous(position = "right") +
-  coord_cartesian(ylim = c(-35, 5)) +  # Add some space above/below
-  theme(panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        axis.text.x = element_blank(), axis.ticks = element_blank(),
-        panel.border = element_blank())
-
-# Juntando os gráficos.
-both.1812.plot.simple <- rbind(ggplotGrob(march.1812.plot.simple),
-                               ggplotGrob(temps.1812.plot), size="last")
-
-# Arrumando novamente a distribuição dos painéis.
-panels <- both.1812.plot.simple$layout$t[grep("panel", both.1812.plot.simple$layout$name)]
-
-both.1812.plot.simple$heights[panels] <- unit(c(3, 1), "null")
-
-grid::grid.newpage()
-grid::grid.draw(both.1812.plot.simple)
-```
-
-Pronto!
-
-# Problema 3: Gapminder
-
-Faça a animação presente em [https://towardsdatascience.com/how-to-build-animated-charts-like-hans-rosling-doing-it-all-in-r-570efc6ba382] seguindo os passos lá descritos.
-
-**Resposta:**
-
-Vamos começar lendo os dados baixados.
-
-```{r, warning=FALSE}
-population_xls <- read.xlsx("./3/indicator gapminder population.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
-fertility_xls <- read.xlsx("./3/indicator undata total_fertility.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
-lifeexp_xls <- read.xlsx("./3/indicator life_expectancy_at_birth.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
-```
-
-Como os scripts passados são muito grandes, irei comentar sua execução dentro do código.
-Primeira parte, a manipulação dos dados.
-
-```{r}
-# Cria uma variável que será usada para filtrar os dados nas linhas a seguir
-myvars <- paste("X", 1962:2015, sep="")
-# Gera novos dataframes somente com os anos desejados.
-population <- population_xls[c('Total.population',myvars)]
-fertility <- fertility_xls[c('Total.fertility.rate',myvars)]
-lifeexp <- lifeexp_xls[c('Life.expectancy',myvars)]
-# Renomeia a primeira coluna dos dataframes com "Country"
-colnames(population)[1] <- "Country"
-colnames(fertility)[1] <- "Country"
-colnames(lifeexp)[1] <- "Country"
-# Remove linhas vazias no final do dataframe
-lifeexp <- lifeexp[1:275,]
-population <- population[1:275,]
-# Transforma os dataframes trazendo os anos como coluna 
-population_m <- melt(population, id=c("Country"))
-lifeexp_m <- melt(lifeexp, id=c("Country"))
-fertility_m <- melt(fertility, id=c("Country"))
-# Renomeia a coluna que mantem os dados
-colnames(population_m)[3] <- "pop"
-colnames(lifeexp_m)[3] <- "life"
-colnames(fertility_m)[3] <- "fert"
-# Unifica os dataframes
-mydf <- merge(lifeexp_m, fertility_m, by=c("Country","variable"), header =T)
-mydf <- merge(mydf, population_m, by=c("Country","variable"), header =T)
-# Usando o gapminder para criar um lista com os continentes de cada país do dataframe
-continent <- gapminder %>% group_by(continent, country) %>% distinct(country, continent)
-continent <- data.frame(lapply(continent, as.character), stringsAsFactors=FALSE)
-colnames(continent)[1] <- "Country"
-# Retira os paises que não estão presentes na tabela de continentes
-mydf_filter <- mydf %>% filter(Country %in% unique(continent$Country))
-# E finalmente adiciona a coluna continentes ao dataframe
-mydf_filter <- merge(mydf_filter, continent, by=c("Country"), header =T)
-#Remove as linhas com valores "N/A", retorna as strings para o formato "character" e converte os dados para o formato numérico.
-mydf_filter[is.na(mydf_filter)] <- 0
-mydf_filter <- data.frame(lapply(mydf_filter, as.character), stringsAsFactors=FALSE)
-mydf_filter$variable <- as.integer(as.character(gsub("X","",mydf_filter$variable)))
-colnames(mydf_filter)[colnames(mydf_filter)=="variable"] <- "year"
-mydf_filter$pop <- round(as.numeric(as.character(mydf_filter$pop))/1000000,1)
-mydf_filter$fert <- as.numeric(as.character(mydf_filter$fert))
-mydf_filter$life <- as.numeric(as.character(mydf_filter$life))
-```
-Segunda parte, a criação do gráfico com o ggplot:
-```{r, warning=FALSE}
-# Criação de um tema global para o ggplot
-theme_set(theme_grey()+ theme(legend.box.background = element_rect(),legend.box.margin = margin(6, 6, 6, 6)) )
-# Cria um gráfico com o ano como frame , eixo x sendo a taxa de fertilidade, eixo y sendo a expectativa de vida e o tamanho dos pontos sendo o tamanho da população. Há também ajustes gráficos, como a configuração dos limites do eixo y.
-p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = year)) +
-  labs(x="Fertility Rate", y = "Life expectancy at birth (years)", caption = "(Based on data from Hans Rosling - gapminder.com)", color = 'Continent',size = "Population (millions)") +
-  ylim(30,100) +
-  geom_point() +
-  scale_color_brewer(type = 'div', palette = 'Spectral') +
-  # Criação da animação definindo título, a unidade que determinara a transição de frames e a forma como será feita(linear).
-  ggtitle("Year: {frame_time}") +
-  transition_time(year) +
-  ease_aes("linear") +
-  enter_fade() +
-  exit_fade()
-# Comando que gera a animação.
-animate(p, width = 900, height = 900, nframes = 100, fps = 8, end_pause = 32,renderer=gifski_renderer("save.gif"))
-```
-
-Agora criando o gráfico interativo com o `plotly`.
-
-```{r, warning=FALSE, message=FALSE}
-# A estrutura do gráfico é feita em ggplot, assim como no chunk acima
-p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = year)) +
-  geom_point()+ ylim(30,100)  + labs(x="Fertility Rate", y = "Life expectancy at birth (years)", color = 'Continent',size = "Population (millions)") +
-  scale_color_brewer(type = 'div', palette = 'Spectral')
-
-# Utilizando o gráfico gerado acima, cria o interativo
-
-ggp <- ggplotly(p, height = 900, width = 900) %>%
-  animation_opts(frame = 100,
-                 easing = "linear",
-                 redraw = FALSE)
-ggp
-htmlwidgets::saveWidget(ggp, "index.html")
-```
-
-# Problema 4: Atirei o pau no gráfico
-
-Assista o vídeo [https://www.youtube.com/watch?v=CJkzf4IZRuk] em que o autor realiza um gráfico em Excel. Seguindo os mesmos passos, faça esse gráfico em R.
-
-**Resposta:**
-
-Vamos começar importando a tabela baixada no painel oficial do covid e já criando um dataframe somente com os dados que usarei para replicar.
-
-```{r, warning=FALSE, error=FALSE}
-covid <- read.xlsx("./4/dados.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
-covid <- data.frame(date = covid$data, obitos = covid$obitosAcumulado)
-```
-
-Como escrevi o código em um único chunk vou novamente comentar dentro desse chunk. 
-O primeiro diz respeito a gráfico dos 14 minutos, que representa a quantidade de óbitos em escala logarítmica.
-
-```{r, warning = FALSE, message= FALSE}
-# Aqui é feita a remoção das linhas cujos número de óbitos é 0 e a criação de um vetor que auxiliará no cálculo da taxa.
-obitos <- covid$obitos
-obitos <- obitos[obitos != 0]
-obitos_help <- c(0 ,obitos)
-obitos <- c(obitos, 0)
-# Cálculo da taxa
-taxa <- obitos / obitos_help
-taxa[taxa == Inf] <- 0
-# Criação de um dataframe com as datas, os óbitos e as taxas já calculadas.
-full <- cbind(data.frame(obitos, taxa)[-c(58),], date = ymd(covid$date[covid$obitos != 0]))
-# Filtragem desse dataframe para as datas utilizadas no video.
-newdf <- full[full$date >= "2020-03-27" & full$date <= "2020-04-14",]
-# Criação dos estilos a serem utilizados no gráfico, as listas a seguir dizem respeito respectivamente ao eixo principal(em escala logarítmica) que está ligado aos óbitos e ao eixo secundário(em escala linear) que está ligado a taxa de crescimento.
-style.atirei1y1 <- list(
-  autotick = FALSE,
-  type = "log", # Transforma o eixo para a escala logarítmica
-  ticks = "outside",
-  tick0 = 10,
-  tickwidth = 2,
-  tickcolor = toRGB("blue"),
-  title = ""
-)
-style.atirei1y2 <- list(
-  autotick = FALSE,
-  ticks = "outside",
-  tick0 = 0.8,
-  dtick = 0.05,
-  ticklen = 1.5,
-  tickwidth = 1,
-  tickcolor = toRGB("blue"),
-  side = "right",
-  overlaying = "y"
-)
-# Utilizando o plotly, defini um gráfico com eixo x sendo as datas.
-atirei1 <- plot_ly(x = ~newdf$date)
-# Adicionando a linha de óbitos.
-atirei1 <- atirei1 %>% add_trace(y = ~newdf$obitos, name = "Óbitos", mode = "lines+markers", line = list(shape = "spline", width = 2))
-# Adicionando a linha de taxa de crescimento e a ligando ao eixo secundário(yaxis = "y2"), assim a mesma se manterá em escala linear
-atirei1 <- atirei1 %>% add_trace(y =  ~newdf$taxa, name = "Taxa de crescimento", mode = "lines+markers", line = list(width = 2), yaxis = "y2")
-# Aplicação dos estilos citados acima, adição do título, movimentação da legenda para a parte inferior.
-atirei1 <- atirei1 %>% layout(xaxis = list(title = ""),yaxis = style.atirei1y1, yaxis2 = style.atirei1y2, title = "Óbitos COVID-19 no Brasil",legend = list(orientation = "h"), margin = list(r = 50))
-# Exibição do gráfico
-atirei1
-```
-
-Reconstrução da tabela de previsão de número de óbitos: 
-
-```{r, warning = FALSE, message=FALSE}
-# Criando o vetor da soma acumulada dos desvios.
-media <- 1.1
-somaaculmulada <- newdf$taxa - media
-# Plotando a soma e assim verificando a média.
-soma <- plot_ly(x = ~newdf$date)
-soma <- soma %>% add_trace(y = ~somaaculmulada, name = "Soma", mode = "lines+markers")
-soma <- soma %>% layout(yaxis = list(tick0 = -1, dtick = 0.1, ticklen = 1))
-soma
-```
-
-Agora a tabela de previsão:
-
-```{r}
-# Função para gerar a previsão dos óbitos com base na taxa de crescimento média
-simulacrescimento <- function(taxa, valor_inicial, dias){
-  sup <- c()
-  for(i in 1:dias){
-    sup <- c(sup, round(valor_inicial * (taxa ^ i)))
-  }
-  sup
-}
-# Preparando as datas a serem adicionadas no dataframe(restante do mês de abril)
-newdates <- seq(as.Date("2020-04-15"), as.Date("2020-04-30"), by="days")
-newdates <- c(newdf$date, newdates)
-# Contagem dos dias que foram adicionados
-diasadicionados <- length(newdates) - length(newdf$date)
-# Preparando as taxas a serem adicionadas no dataframe(supondo 1.1 no restante do mês de abril)
-taxa <-  rep(1.1, times = diasadicionados)
-newtaxa <- c(newdf$taxa, taxa)
-# Criação do vetor com os óbitos já registrados e com a previsão.
-newobitos <- c(newdf$obitos, simulacrescimento(media, tail(newdf$obitos, n = 1), diasadicionados))
-# União das novas unidades em um dataframe.
-tabela <- data.frame(Data = newdates, obitos = newobitos, taxa = newtaxa)
-
-knitr::kable(tabela)
-```
-
-A previsão feita diz 7039 óbitos até o final do mês de abril. Isso nos mostra que essa taxa na realidade abaixou de 1.1, no final de abril foram registrados pelas secretárias estaduais de saúde 5912 óbitos.
-
-
-  
-  
-    
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
+<!-- # Problema 2: Minard -->
+
+<!-- Reproduza o gráfico de Minard que representa a jornada do lider político Napoleão ao levar seu exército para a Campanha Russa. O tutorial se encontra em [https://www.andrewheiss.com/blog/2017/08/10/exploring-minards-1812-plot-with-ggplot2/]. -->
+
+<!-- **Resposta:** -->
+
+<!-- Começamos importando os dados baixados e já transformando as datas para o formato padrão do R. -->
+
+<!-- ```{r} -->
+<!-- cities <- read.table("./2/cities.txt", -->
+<!--                      header = TRUE, stringsAsFactors = FALSE) -->
+
+<!-- troops <- read.table("./2/troops.txt", -->
+<!--                      header = TRUE, stringsAsFactors = FALSE) -->
+
+<!-- temps <- read.table("./2/temps.txt", -->
+<!--                     header = TRUE, stringsAsFactors = FALSE) %>% -->
+<!--   mutate(date = dmy(date)) -->
+<!-- ``` -->
+
+<!-- Vamos começar com o gráfico de cima. Dentro da variável `troops` armazenamos os dados relativos ao caminhos traçados por cada grupo. Plotando esses caminhos com o `geom_path()`: -->
+
+<!-- ```{r,fig.width=10, fig.height=2.5} -->
+<!-- ggplot(troops, aes(x = long, y = lat, group = group)) + -->
+<!--   geom_path() -->
+<!-- ``` -->
+
+<!-- Plotando agora com o diferenciando a quantidade de sobreviventes pela espessura da linha e a direção pela cor: -->
+
+<!-- ```{r, fig.width=10, fig.height=2.5} -->
+<!-- ggplot(troops, aes(x = long, y = lat, group = group, -->
+<!--                    color = direction, size = survivors)) + -->
+<!--   geom_path(lineend = "round") -->
+<!-- ``` -->
+
+<!-- Vamos usar o `scale_size()` para transmitir melhor a quantidade de sobreviventes: -->
+
+<!-- ```{r, fig.width=10, fig.height=2.5} -->
+<!-- ggplot(troops, aes(x = long, y = lat, group = group, -->
+<!--                    color = direction, size = survivors)) + -->
+<!--   geom_path(lineend = "round") + -->
+<!--   scale_size(range = c(0.5, 15)) -->
+<!-- ``` -->
+
+<!-- Vamos remover a legendas e mudar as cores: -->
+
+<!-- ```{r, fig.width=10, fig.height=2.5} -->
+<!-- ggplot(troops, aes(x = long, y = lat, group = group, -->
+<!--                    color = direction, size = survivors)) + -->
+<!--   geom_path(lineend = "round") + -->
+<!--   scale_size(range = c(0.5, 15)) + -->
+<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
+<!--   labs(x = NULL, y = NULL) + -->
+<!--   guides(color = FALSE, size = FALSE) -->
+<!-- ``` -->
+
+<!-- Vamos então adicionar as cidades nas quais as tropas passaram no gráfico com o `geom_point()`: -->
+
+<!-- ```{r, fig.width=10, fig.height=2.5} -->
+<!-- ggplot() + -->
+<!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
+<!--                                color = direction, size = survivors), -->
+<!--             lineend = "round") + -->
+<!--   geom_point(data = cities, aes(x = long, y = lat)) + -->
+<!--   geom_text(data = cities, aes(x = long, y = lat, label = city), vjust = 1.5) + -->
+<!--   scale_size(range = c(0.5, 15)) + -->
+<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
+<!--   labs(x = NULL, y = NULL) + -->
+<!--   guides(color = FALSE, size = FALSE) -->
+<!-- ``` -->
+
+<!-- Como os nomes de algumas das cidades ficou em cima da linha preta, vamos utilizar o `geom_textrepel()` para resolver esse problema: -->
+
+<!-- ```{r, fig.width=10, fig.height=2.5, warning=FALSE} -->
+<!-- ggplot() + -->
+<!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
+<!--                                color = direction, size = survivors), -->
+<!--             lineend = "round") + -->
+<!--   geom_point(data = cities, aes(x = long, y = lat), -->
+<!--              color = "#DC5B44") + -->
+<!--   geom_text_repel(data = cities, aes(x = long, y = lat, label = city), -->
+<!--                   color = "#DC5B44") + -->
+<!--   scale_size(range = c(0.5, 15)) + -->
+<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
+<!--   labs(x = NULL, y = NULL) + -->
+<!--   guides(color = FALSE, size = FALSE) -->
+<!-- ``` -->
+
+<!-- Vamos agora começar o processo de adicionar um mapa no gráfico, para isso temos que baixar a imagem de fundo: -->
+
+<!-- ```{r, message=FALSE} -->
+<!-- march.1812.europe <- c(left = -13.10, bottom = 35.75, right = 41.04, top = 61.86) -->
+<!-- march.1812.europe.map <- get_stamenmap(bbox = march.1812.europe, zoom = 5, -->
+<!--                                        maptype = "terrain", where = "cache") -->
+<!-- march.1812.europe.map.wc <- get_stamenmap(bbox = march.1812.europe, zoom = 5, -->
+<!--                                           maptype = "watercolor", where = "cache") -->
+<!-- ``` -->
+
+<!-- Usando `ggmap` vamos adicionar o mapa de fundo: -->
+
+<!-- ```{r, fig.width=10, fig.height=6} -->
+<!-- ggmap(march.1812.europe.map.wc) + -->
+<!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
+<!--                                color = direction, size = survivors), -->
+<!--             lineend = "round") + -->
+<!--   scale_size(range = c(0.5, 5)) + -->
+<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
+<!--   guides(color = FALSE, size = FALSE) + -->
+<!--   theme_nothing() -->
+<!-- ``` -->
+
+<!-- Vamos agora dar um zoom no mapa para a região que queremos, mudar o tipo de mapa para "mapa de terreno" e então adicionar o resto dos elementos que já tinhamos: -->
+
+<!-- ```{r, message=FALSE, warning=FALSE, fig.width=10, fig.height=4} -->
+<!-- march.1812.ne.europe <- c(left = 23.5, bottom = 53.4, right = 38.1, top = 56.3) -->
+
+<!-- march.1812.ne.europe.map <- get_stamenmap(bbox = march.1812.ne.europe, zoom = 8, -->
+<!--                                           maptype = "terrain-background", where = "cache") -->
+
+<!-- march.1812.plot <- ggmap(march.1812.ne.europe.map) + -->
+<!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
+<!--                                color = direction, size = survivors), -->
+<!--             lineend = "round") + -->
+<!--   geom_point(data = cities, aes(x = long, y = lat), -->
+<!--              color = "#DC5B44") + -->
+<!--   geom_text_repel(data = cities, aes(x = long, y = lat, label = city), -->
+<!--                   color = "#DC5B44") + -->
+<!--   scale_size(range = c(0.5, 10)) + -->
+<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
+<!--   guides(color = FALSE, size = FALSE) + -->
+<!--   theme_nothing() -->
+
+<!-- march.1812.plot -->
+<!-- ``` -->
+
+<!-- Temos então a parte superior do gráfico final, vamos ao gráfico de temperaturas. -->
+
+<!-- Podemos facilmente gerá-lo com `geom_line()`: -->
+
+<!-- ```{r, fig.width=10, fig.height=4} -->
+<!-- ggplot(data = temps, aes(x = long, y = temp)) + -->
+<!--   geom_line() + -->
+<!--   geom_text(aes(label = temp), vjust = 1.5) -->
+<!-- ``` -->
+
+<!-- Melhorando as labels, removendo o grid vertical, movendo o eixo y para a direita e removendo as descrições do eixo x: -->
+
+<!-- ```{r, fig.width=10, fig.height=4, warning=FALSE} -->
+<!-- temps.nice <- temps %>% -->
+<!--   mutate(nice.label = paste0(temp, "°, ", month, ". ", day)) -->
+
+<!-- temps.1812.plot <- ggplot(data = temps.nice, aes(x = long, y = temp)) + -->
+<!--   geom_line() + -->
+<!--   geom_label(aes(label = nice.label), -->
+<!--              size = 2.5) + -->
+<!--   labs(x = NULL, y = "° Celsius") + -->
+<!--   scale_x_continuous(limits = ggplot_build(march.1812.plot)$layout$panel_ranges[[1]]$x.range) + -->
+<!--   scale_y_continuous(position = "right") + -->
+<!--   coord_cartesian(ylim = c(-35, 5)) +  # Add some space above/below -->
+<!--   theme(panel.grid.major.x = element_blank(), -->
+<!--         panel.grid.minor.x = element_blank(), -->
+<!--         panel.grid.minor.y = element_blank(), -->
+<!--         axis.text.x = element_blank(), axis.ticks = element_blank(), -->
+<!--         panel.border = element_blank()) -->
+
+<!-- temps.1812.plot -->
+<!-- ``` -->
+
+<!-- Tendo o gráfico de temperatura, vamos juntar os gráficos com `grid`: -->
+
+<!-- ```{r, warning=FALSE} -->
+<!-- both.1812.plot <- rbind(ggplotGrob(march.1812.plot), -->
+<!--                         ggplotGrob(temps.1812.plot), size="last") -->
+
+<!-- grid::grid.newpage() -->
+<!-- grid::grid.draw(both.1812.plot) -->
+<!-- ``` -->
+
+<!-- Os gráficos estão alinhados mas temos um problema com as proporções. Vamos resolver modificando manualmente os painéis. -->
+
+<!-- ```{r, fig.width=10, fig.height=5.5, warning=FALSE} -->
+<!-- # Identificando os paneis do gráfico -->
+<!-- panels <- both.1812.plot$layout$t[grep("panel", both.1812.plot$layout$name)] -->
+
+<!-- map.panel.height <- both.1812.plot$heights[panels][1] -->
+
+<!-- # Colocando os painéis no gráfico. -->
+<!-- both.1812.plot$heights[panels] <- unit(c(map.panel.height, 0.1), "null") -->
+
+<!-- grid::grid.newpage() -->
+<!-- grid::grid.draw(both.1812.plot) -->
+<!-- ``` -->
+
+<!-- Vamos gerar agora um gráfico sem o mapa de fundo. -->
+
+<!-- ```{r, fig.width=10, fig.height=4.75, warning=FALSE} -->
+
+<!-- march.1812.plot.simple <- ggplot() + -->
+<!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
+<!--                                color = direction, size = survivors), -->
+<!--             lineend = "round") + -->
+<!--   geom_point(data = cities, aes(x = long, y = lat), -->
+<!--              color = "#DC5B44") + -->
+<!--   geom_text_repel(data = cities, aes(x = long, y = lat, label = city), -->
+<!--                   color = "#DC5B44") + -->
+<!--   scale_size(range = c(0.5, 10)) + -->
+<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
+<!--   guides(color = FALSE, size = FALSE) + -->
+<!--   theme_nothing() -->
+
+<!-- # Mudanças para que os eixos se coincidam sem o mapa. -->
+<!-- temps.1812.plot <- ggplot(data = temps.nice, aes(x = long, y = temp)) + -->
+<!--   geom_line() + -->
+<!--   geom_label(aes(label = nice.label), -->
+<!--              size = 2.5) + -->
+<!--   labs(x = NULL, y = "° Celsius") + -->
+<!--   scale_x_continuous(limits = ggplot_build(march.1812.plot.simple)$layout$panel_ranges[[1]]$x.range) + -->
+<!--   scale_y_continuous(position = "right") + -->
+<!--   coord_cartesian(ylim = c(-35, 5)) +  # Add some space above/below -->
+<!--   theme(panel.grid.major.x = element_blank(), -->
+<!--         panel.grid.minor.x = element_blank(), -->
+<!--         panel.grid.minor.y = element_blank(), -->
+<!--         axis.text.x = element_blank(), axis.ticks = element_blank(), -->
+<!--         panel.border = element_blank()) -->
+
+<!-- # Juntando os gráficos. -->
+<!-- both.1812.plot.simple <- rbind(ggplotGrob(march.1812.plot.simple), -->
+<!--                                ggplotGrob(temps.1812.plot), size="last") -->
+
+<!-- # Arrumando novamente a distribuição dos painéis. -->
+<!-- panels <- both.1812.plot.simple$layout$t[grep("panel", both.1812.plot.simple$layout$name)] -->
+
+<!-- both.1812.plot.simple$heights[panels] <- unit(c(3, 1), "null") -->
+
+<!-- grid::grid.newpage() -->
+<!-- grid::grid.draw(both.1812.plot.simple) -->
+<!-- ``` -->
+
+<!-- Pronto! -->
+
+<!-- # Problema 3: Gapminder -->
+
+<!-- Faça a animação presente em [https://towardsdatascience.com/how-to-build-animated-charts-like-hans-rosling-doing-it-all-in-r-570efc6ba382] seguindo os passos lá descritos. -->
+
+<!-- **Resposta:** -->
+
+<!-- Vamos começar lendo os dados baixados. -->
+
+<!-- ```{r, warning=FALSE} -->
+<!-- population_xls <- read.xlsx("./3/indicator gapminder population.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE) -->
+<!-- fertility_xls <- read.xlsx("./3/indicator undata total_fertility.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE) -->
+<!-- lifeexp_xls <- read.xlsx("./3/indicator life_expectancy_at_birth.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE) -->
+<!-- ``` -->
+
+<!-- Como os scripts passados são muito grandes, irei comentar sua execução dentro do código. -->
+<!-- Primeira parte, a manipulação dos dados. -->
+
+<!-- ```{r} -->
+<!-- # Cria uma variável que será usada para filtrar os dados nas linhas a seguir -->
+<!-- myvars <- paste("X", 1962:2015, sep="") -->
+<!-- # Gera novos dataframes somente com os anos desejados. -->
+<!-- population <- population_xls[c('Total.population',myvars)] -->
+<!-- fertility <- fertility_xls[c('Total.fertility.rate',myvars)] -->
+<!-- lifeexp <- lifeexp_xls[c('Life.expectancy',myvars)] -->
+<!-- # Renomeia a primeira coluna dos dataframes com "Country" -->
+<!-- colnames(population)[1] <- "Country" -->
+<!-- colnames(fertility)[1] <- "Country" -->
+<!-- colnames(lifeexp)[1] <- "Country" -->
+<!-- # Remove linhas vazias no final do dataframe -->
+<!-- lifeexp <- lifeexp[1:275,] -->
+<!-- population <- population[1:275,] -->
+<!-- # Transforma os dataframes trazendo os anos como coluna  -->
+<!-- population_m <- melt(population, id=c("Country")) -->
+<!-- lifeexp_m <- melt(lifeexp, id=c("Country")) -->
+<!-- fertility_m <- melt(fertility, id=c("Country")) -->
+<!-- # Renomeia a coluna que mantem os dados -->
+<!-- colnames(population_m)[3] <- "pop" -->
+<!-- colnames(lifeexp_m)[3] <- "life" -->
+<!-- colnames(fertility_m)[3] <- "fert" -->
+<!-- # Unifica os dataframes -->
+<!-- mydf <- merge(lifeexp_m, fertility_m, by=c("Country","variable"), header =T) -->
+<!-- mydf <- merge(mydf, population_m, by=c("Country","variable"), header =T) -->
+<!-- # Usando o gapminder para criar um lista com os continentes de cada país do dataframe -->
+<!-- continent <- gapminder %>% group_by(continent, country) %>% distinct(country, continent) -->
+<!-- continent <- data.frame(lapply(continent, as.character), stringsAsFactors=FALSE) -->
+<!-- colnames(continent)[1] <- "Country" -->
+<!-- # Retira os paises que não estão presentes na tabela de continentes -->
+<!-- mydf_filter <- mydf %>% filter(Country %in% unique(continent$Country)) -->
+<!-- # E finalmente adiciona a coluna continentes ao dataframe -->
+<!-- mydf_filter <- merge(mydf_filter, continent, by=c("Country"), header =T) -->
+<!-- #Remove as linhas com valores "N/A", retorna as strings para o formato "character" e converte os dados para o formato numérico. -->
+<!-- mydf_filter[is.na(mydf_filter)] <- 0 -->
+<!-- mydf_filter <- data.frame(lapply(mydf_filter, as.character), stringsAsFactors=FALSE) -->
+<!-- mydf_filter$variable <- as.integer(as.character(gsub("X","",mydf_filter$variable))) -->
+<!-- colnames(mydf_filter)[colnames(mydf_filter)=="variable"] <- "year" -->
+<!-- mydf_filter$pop <- round(as.numeric(as.character(mydf_filter$pop))/1000000,1) -->
+<!-- mydf_filter$fert <- as.numeric(as.character(mydf_filter$fert)) -->
+<!-- mydf_filter$life <- as.numeric(as.character(mydf_filter$life)) -->
+<!-- ``` -->
+<!-- Segunda parte, a criação do gráfico com o ggplot: -->
+<!-- ```{r, warning=FALSE} -->
+<!-- # Criação de um tema global para o ggplot -->
+<!-- theme_set(theme_grey()+ theme(legend.box.background = element_rect(),legend.box.margin = margin(6, 6, 6, 6)) ) -->
+<!-- # Cria um gráfico com o ano como frame , eixo x sendo a taxa de fertilidade, eixo y sendo a expectativa de vida e o tamanho dos pontos sendo o tamanho da população. Há também ajustes gráficos, como a configuração dos limites do eixo y. -->
+<!-- p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = year)) + -->
+<!--   labs(x="Fertility Rate", y = "Life expectancy at birth (years)", caption = "(Based on data from Hans Rosling - gapminder.com)", color = 'Continent',size = "Population (millions)") + -->
+<!--   ylim(30,100) + -->
+<!--   geom_point() + -->
+<!--   scale_color_brewer(type = 'div', palette = 'Spectral') + -->
+<!--   # Criação da animação definindo título, a unidade que determinara a transição de frames e a forma como será feita(linear). -->
+<!--   ggtitle("Year: {frame_time}") + -->
+<!--   transition_time(year) + -->
+<!--   ease_aes("linear") + -->
+<!--   enter_fade() + -->
+<!--   exit_fade() -->
+<!-- # Comando que gera a animação. -->
+<!-- animate(p, width = 900, height = 900, nframes = 100, fps = 8, end_pause = 32,renderer=gifski_renderer("save.gif")) -->
+<!-- ``` -->
+
+<!-- Agora criando o gráfico interativo com o `plotly`. -->
+
+<!-- ```{r, warning=FALSE, message=FALSE} -->
+<!-- # A estrutura do gráfico é feita em ggplot, assim como no chunk acima -->
+<!-- p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = year)) + -->
+<!--   geom_point()+ ylim(30,100)  + labs(x="Fertility Rate", y = "Life expectancy at birth (years)", color = 'Continent',size = "Population (millions)") + -->
+<!--   scale_color_brewer(type = 'div', palette = 'Spectral') -->
+
+<!-- # Utilizando o gráfico gerado acima, cria o interativo -->
+
+<!-- ggp <- ggplotly(p, height = 900, width = 900) %>% -->
+<!--   animation_opts(frame = 100, -->
+<!--                  easing = "linear", -->
+<!--                  redraw = FALSE) -->
+<!-- ggp -->
+<!-- htmlwidgets::saveWidget(ggp, "index.html") -->
+<!-- ``` -->
+
+<!-- # Problema 4: Atirei o pau no gráfico -->
+
+<!-- Assista o vídeo [https://www.youtube.com/watch?v=CJkzf4IZRuk] em que o autor realiza um gráfico em Excel. Seguindo os mesmos passos, faça esse gráfico em R. -->
+
+<!-- **Resposta:** -->
+
+<!-- Vamos começar importando a tabela baixada no painel oficial do covid e já criando um dataframe somente com os dados que usarei para replicar. -->
+
+<!-- ```{r, warning=FALSE, error=FALSE} -->
+<!-- covid <- read.xlsx("./4/dados.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE) -->
+<!-- covid <- data.frame(date = covid$data, obitos = covid$obitosAcumulado) -->
+<!-- ``` -->
+
+<!-- Como escrevi o código em um único chunk vou novamente comentar dentro desse chunk.  -->
+<!-- O primeiro diz respeito a gráfico dos 14 minutos, que representa a quantidade de óbitos em escala logarítmica. -->
+
+<!-- ```{r, warning = FALSE, message= FALSE} -->
+<!-- # Aqui é feita a remoção das linhas cujos número de óbitos é 0 e a criação de um vetor que auxiliará no cálculo da taxa. -->
+<!-- obitos <- covid$obitos -->
+<!-- obitos <- obitos[obitos != 0] -->
+<!-- obitos_help <- c(0 ,obitos) -->
+<!-- obitos <- c(obitos, 0) -->
+<!-- # Cálculo da taxa -->
+<!-- taxa <- obitos / obitos_help -->
+<!-- taxa[taxa == Inf] <- 0 -->
+<!-- # Criação de um dataframe com as datas, os óbitos e as taxas já calculadas. -->
+<!-- full <- cbind(data.frame(obitos, taxa)[-c(58),], date = ymd(covid$date[covid$obitos != 0])) -->
+<!-- # Filtragem desse dataframe para as datas utilizadas no video. -->
+<!-- newdf <- full[full$date >= "2020-03-27" & full$date <= "2020-04-14",] -->
+<!-- # Criação dos estilos a serem utilizados no gráfico, as listas a seguir dizem respeito respectivamente ao eixo principal(em escala logarítmica) que está ligado aos óbitos e ao eixo secundário(em escala linear) que está ligado a taxa de crescimento. -->
+<!-- style.atirei1y1 <- list( -->
+<!--   autotick = FALSE, -->
+<!--   type = "log", # Transforma o eixo para a escala logarítmica -->
+<!--   ticks = "outside", -->
+<!--   tick0 = 10, -->
+<!--   tickwidth = 2, -->
+<!--   tickcolor = toRGB("blue"), -->
+<!--   title = "" -->
+<!-- ) -->
+<!-- style.atirei1y2 <- list( -->
+<!--   autotick = FALSE, -->
+<!--   ticks = "outside", -->
+<!--   tick0 = 0.8, -->
+<!--   dtick = 0.05, -->
+<!--   ticklen = 1.5, -->
+<!--   tickwidth = 1, -->
+<!--   tickcolor = toRGB("blue"), -->
+<!--   side = "right", -->
+<!--   overlaying = "y" -->
+<!-- ) -->
+<!-- # Utilizando o plotly, defini um gráfico com eixo x sendo as datas. -->
+<!-- atirei1 <- plot_ly(x = ~newdf$date) -->
+<!-- # Adicionando a linha de óbitos. -->
+<!-- atirei1 <- atirei1 %>% add_trace(y = ~newdf$obitos, name = "Óbitos", mode = "lines+markers", line = list(shape = "spline", width = 2)) -->
+<!-- # Adicionando a linha de taxa de crescimento e a ligando ao eixo secundário(yaxis = "y2"), assim a mesma se manterá em escala linear -->
+<!-- atirei1 <- atirei1 %>% add_trace(y =  ~newdf$taxa, name = "Taxa de crescimento", mode = "lines+markers", line = list(width = 2), yaxis = "y2") -->
+<!-- # Aplicação dos estilos citados acima, adição do título, movimentação da legenda para a parte inferior. -->
+<!-- atirei1 <- atirei1 %>% layout(xaxis = list(title = ""),yaxis = style.atirei1y1, yaxis2 = style.atirei1y2, title = "Óbitos COVID-19 no Brasil",legend = list(orientation = "h"), margin = list(r = 50)) -->
+<!-- # Exibição do gráfico -->
+<!-- atirei1 -->
+<!-- ``` -->
+
+<!-- Reconstrução da tabela de previsão de número de óbitos:  -->
+
+<!-- ```{r, warning = FALSE, message=FALSE} -->
+<!-- # Criando o vetor da soma acumulada dos desvios. -->
+<!-- media <- 1.1 -->
+<!-- somaaculmulada <- newdf$taxa - media -->
+<!-- # Plotando a soma e assim verificando a média. -->
+<!-- soma <- plot_ly(x = ~newdf$date) -->
+<!-- soma <- soma %>% add_trace(y = ~somaaculmulada, name = "Soma", mode = "lines+markers") -->
+<!-- soma <- soma %>% layout(yaxis = list(tick0 = -1, dtick = 0.1, ticklen = 1)) -->
+<!-- soma -->
+<!-- ``` -->
+
+<!-- Agora a tabela de previsão: -->
+
+<!-- ```{r} -->
+<!-- # Função para gerar a previsão dos óbitos com base na taxa de crescimento média -->
+<!-- simulacrescimento <- function(taxa, valor_inicial, dias){ -->
+<!--   sup <- c() -->
+<!--   for(i in 1:dias){ -->
+<!--     sup <- c(sup, round(valor_inicial * (taxa ^ i))) -->
+<!--   } -->
+<!--   sup -->
+<!-- } -->
+<!-- # Preparando as datas a serem adicionadas no dataframe(restante do mês de abril) -->
+<!-- newdates <- seq(as.Date("2020-04-15"), as.Date("2020-04-30"), by="days") -->
+<!-- newdates <- c(newdf$date, newdates) -->
+<!-- # Contagem dos dias que foram adicionados -->
+<!-- diasadicionados <- length(newdates) - length(newdf$date) -->
+<!-- # Preparando as taxas a serem adicionadas no dataframe(supondo 1.1 no restante do mês de abril) -->
+<!-- taxa <-  rep(1.1, times = diasadicionados) -->
+<!-- newtaxa <- c(newdf$taxa, taxa) -->
+<!-- # Criação do vetor com os óbitos já registrados e com a previsão. -->
+<!-- newobitos <- c(newdf$obitos, simulacrescimento(media, tail(newdf$obitos, n = 1), diasadicionados)) -->
+<!-- # União das novas unidades em um dataframe. -->
+<!-- tabela <- data.frame(Data = newdates, obitos = newobitos, taxa = newtaxa) -->
+
+<!-- knitr::kable(tabela) -->
+<!-- ``` -->
+
+<!-- A previsão feita diz 7039 óbitos até o final do mês de abril. Isso nos mostra que essa taxa na realidade abaixou de 1.1, no final de abril foram registrados pelas secretárias estaduais de saúde 5912 óbitos. -->
