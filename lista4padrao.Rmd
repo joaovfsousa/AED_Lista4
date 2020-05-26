@@ -3,6 +3,7 @@ title: 'Lista 5: Modificação da lista 4'
 author: "João Vitor Freitas Sousa"
 date: "25/05/2020"
 output:
+  pdf_document: default
   html_document: default
 ---
 
@@ -33,105 +34,104 @@ library(grid)
 
 # Problema 1: The Economist
 
-Crie o último gráfico do link [https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html]. Este é um gráfico que apresenta uma relação entre o IDH x IPC entre diversos países.
+<!-- Crie o último gráfico do link [https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html]. Este é um gráfico que apresenta uma relação entre o IDH x IPC entre diversos países. -->
 
-**Resposta:**
+<!-- **Resposta:** -->
 
-Dados os conceitos passados nas últimas aulas, considerei válido alterar a escala de cor utilizando agora uma retirada do ColorBrewer com configurações divergentes. Considerei também retirar os países que estão sem as labels, visto que assim o gráfico fica menos poluído e aumenta a velocidade de interpretação do mesmo.
+<!-- Dados os conceitos passados nas últimas aulas, considerei válido alterar a escala de cor utilizando agora uma retirada do ColorBrewer com configurações divergentes. Considerei também retirar os países que estão sem as labels, visto que assim o gráfico fica menos poluído e aumenta a velocidade de interpretação do mesmo. -->
 
-Primeiro então a importação dos dados e a manipulação.
+<!-- Primeiro então a importação dos dados e a manipulação. -->
 
-```{r, fig.width=14, fig.height=10, warning=FALSE, message=FALSE}
-dat <- read_csv("./1/EconomistData.csv")
-pointsToLabel <- c("Russia", "Venezuela", "Iraq", "Myanmar", "Sudan",
-                   "Afghanistan", "Congo", "Greece", "Argentina", "Brazil",
-                   "India", "Italy", "China", "South Africa", "Spane",
-                   "Botswana", "Cape Verde", "Bhutan", "Rwanda", "France",
-                   "United States", "Germany", "Britain", "Barbados", "Norway", "Japan",
-                   "New Zealand", "Singapore")
+<!-- ```{r, fig.width=14, fig.height=10, warning=FALSE, message=FALSE} -->
+<!-- dat <- read_csv("./1/EconomistData.csv") -->
+<!-- pointsToLabel <- c("Russia", "Venezuela", "Iraq", "Myanmar", "Sudan", -->
+<!--                    "Afghanistan", "Congo", "Greece", "Argentina", "Brazil", -->
+<!--                    "India", "Italy", "China", "South Africa", "Spane", -->
+<!--                    "Botswana", "Cape Verde", "Bhutan", "Rwanda", "France", -->
+<!--                    "United States", "Germany", "Britain", "Barbados", "Norway", "Japan", -->
+<!--                    "New Zealand", "Singapore") -->
 
-dat <- dat[dat$Country %in% pointsToLabel,] # Filtro dos países
+<!-- dat <- dat[dat$Country %in% pointsToLabel,] # Filtro dos países -->
 
-dat$Region <- factor(dat$Region,
-                     levels = c("EU W. Europe",
-                                "Americas",
-                                "Asia Pacific",
-                                "East EU Cemt Asia",
-                                "MENA",
-                                "SSA"),
-                     labels = c("OECD",
-                                "Americas",
-                                "Asia &\nOceania",
-                                "Central &\nEastern Europe",
-                                "Middle East &\nnorth Africa",
-                                "Sub-Saharan\nAfrica"))
+<!-- dat$Region <- factor(dat$Region, -->
+<!--                      levels = c("EU W. Europe", -->
+<!--                                 "Americas", -->
+<!--                                 "Asia Pacific", -->
+<!--                                 "East EU Cemt Asia", -->
+<!--                                 "MENA", -->
+<!--                                 "SSA"), -->
+<!--                      labels = c("OECD", -->
+<!--                                 "Americas", -->
+<!--                                 "Asia &\nOceania", -->
+<!--                                 "Central &\nEastern Europe", -->
+<!--                                 "Middle East &\nnorth Africa", -->
+<!--                                 "Sub-Saharan\nAfrica")) -->
 
-mR2 <- summary(lm(HDI ~ CPI + log(CPI), data = dat))$r.squared
-mR2 <- paste0(format(mR2, digits = 2), "%")
-``` 
+<!-- mR2 <- summary(lm(HDI ~ CPI + log(CPI), data = dat))$r.squared -->
+<!-- mR2 <- paste0(format(mR2, digits = 2), "%") -->
+<!-- ``` -->
 
-Aqui o código que gera o gráfico já com a nova paleta de cores.
+<!-- Aqui o código que gera o gráfico já com a nova paleta de cores. -->
 
-```{r fig.height=10, fig.width=14, message=FALSE, warning=FALSE}
-#newpalette <- c('#d73027','#fc8d59','#fee08b','#d9ef8b','#91cf60','#1a9850')
-newpalette <- c('#d53e4f','#fc8d59','#fee08b','#e6f598','#99d594','#3288bd')
-p <- ggplot(dat,
-            mapping = aes(x = CPI, y = HDI)) +
-  geom_smooth(mapping = aes(linetype = "r2"),
-              method = "lm",
-              formula = y ~ x + log(x), se = FALSE,
-              color = "red") +
-  geom_point(mapping = aes(color = Region),
-             shape = 1,
-             size = 4,
-             stroke = 1.5) +
-  geom_text_repel(mapping = aes(label = Country),
-                  data = transform(dat,labels = Country),
-                  force = 4,
-                  direction = c("both")) +
-  scale_x_continuous(name = "Corruption Perception Index, 2011 (10=least corrupt)",
-                     limits = c(1.0, 10.0),
-                     breaks = 1:10) +
-  scale_y_continuous(name = "Human Development Index, 2011 (1=best)",
-                     limits = c(0.2, 1.0),
-                     breaks = seq(0.2, 1.0, by = 0.1)) +
-  scale_color_manual(name = "",
-                     values = newpalette,
-                     guide = guide_legend(nrow = 1, order=1)) +
-  scale_alpha_discrete(range = c(0, 1),
-                       guide = FALSE) +
-  
-  scale_linetype(name = "",
-                 breaks = "r2",
-                 labels = list(bquote(R^2==.(mR2))),
-                 guide = guide_legend(override.aes = list(linetype = 1, size = 2, color = "red"), order=2)) +
-  ggtitle("Corruption and human development") +
-  labs(caption="Sources: Transparency International; UN Human Development Report") +
-  theme_bw() +
-  theme(panel.border = element_blank(),
-        panel.grid = element_blank(),
-        panel.grid.major.y = element_line(color = "gray"),
-        text = element_text(color = "black"),
-        axis.title.x = element_text(face="italic"),
-        axis.title.y = element_text(face="italic"),
-        legend.position = "top",
-        legend.direction = "horizontal",
-        legend.box = "horizontal",
-        legend.text = element_text(size = 12),
-        plot.caption = element_text(hjust=0),
-        plot.title = element_text(size = 16, face = "bold"))
-p
-```
+<!-- ```{r fig.height=10, fig.width=14, message=FALSE, warning=FALSE} -->
+<!-- newpalette <- c('#d73027','#fc8d59','#fee08b','#d9ef8b','#91cf60','#1a9850') -->
+<!-- #newpalette <- c('#d53e4f','#fc8d59','#fee08b','#e6f598','#99d594','#3288bd') -->
+<!-- p <- ggplot(dat, -->
+<!--             mapping = aes(x = CPI, y = HDI)) + -->
+<!--   geom_smooth(mapping = aes(linetype = "r2"), -->
+<!--               method = "lm", -->
+<!--               formula = y ~ x + log(x), se = FALSE, -->
+<!--               color = "red") + -->
+<!--   geom_point(mapping = aes(color = Region), -->
+<!--              shape = 1, -->
+<!--              size = 4, -->
+<!--              stroke = 1.5) + -->
+<!--   geom_text_repel(mapping = aes(label = Country), -->
+<!--                   data = transform(dat,labels = Country), -->
+<!--                   force = 4, -->
+<!--                   direction = c("both")) + -->
+<!--   scale_x_continuous(name = "Corruption Perception Index, 2011 (10=least corrupt)", -->
+<!--                      limits = c(1.0, 10.0), -->
+<!--                      breaks = 1:10) + -->
+<!--   scale_y_continuous(name = "Human Development Index, 2011 (1=best)", -->
+<!--                      limits = c(0.2, 1.0), -->
+<!--                      breaks = seq(0.2, 1.0, by = 0.1)) + -->
+<!--   scale_color_manual(name = "", -->
+<!--                      values = newpalette, -->
+<!--                      guide = guide_legend(nrow = 1, order=1)) + -->
+<!--   scale_alpha_discrete(range = c(0, 1), -->
+<!--                        guide = FALSE) + -->
 
-<!-- # Problema 2: Minard -->
+<!--   scale_linetype(name = "", -->
+<!--                  breaks = "r2", -->
+<!--                  labels = list(bquote(R^2==.(mR2))), -->
+<!--                  guide = guide_legend(override.aes = list(linetype = 1, size = 2, color = "red"), order=2)) + -->
+<!--   ggtitle("Corruption and human development") + -->
+<!--   labs(caption="Sources: Transparency International; UN Human Development Report") + -->
+<!--   theme_bw() + -->
+<!--   theme(panel.border = element_blank(), -->
+<!--         panel.grid = element_blank(), -->
+<!--         panel.grid.major.y = element_line(color = "gray"), -->
+<!--         text = element_text(color = "black"), -->
+<!--         axis.title.x = element_text(face="italic"), -->
+<!--         axis.title.y = element_text(face="italic"), -->
+<!--         legend.position = "top", -->
+<!--         legend.direction = "horizontal", -->
+<!--         legend.box = "horizontal", -->
+<!--         legend.text = element_text(size = 12), -->
+<!--         plot.caption = element_text(hjust=0), -->
+<!--         plot.title = element_text(size = 16, face = "bold")) -->
+<!-- p -->
+<!-- ``` -->
+
+# Problema 2: Minard
 
 <!-- Reproduza o gráfico de Minard que representa a jornada do lider político Napoleão ao levar seu exército para a Campanha Russa. O tutorial se encontra em [https://www.andrewheiss.com/blog/2017/08/10/exploring-minards-1812-plot-with-ggplot2/]. -->
 
 <!-- **Resposta:** -->
 
-<!-- Começamos importando os dados baixados e já transformando as datas para o formato padrão do R. -->
-
 <!-- ```{r} -->
+<!-- # Importando os dados baixados e já transformando as datas para o formato padrão do R. -->
 <!-- cities <- read.table("./2/cities.txt", -->
 <!--                      header = TRUE, stringsAsFactors = FALSE) -->
 
@@ -143,180 +143,13 @@ p
 <!--   mutate(date = dmy(date)) -->
 <!-- ``` -->
 
-<!-- Vamos começar com o gráfico de cima. Dentro da variável `troops` armazenamos os dados relativos ao caminhos traçados por cada grupo. Plotando esses caminhos com o `geom_path()`: -->
-
-<!-- ```{r,fig.width=10, fig.height=2.5} -->
-<!-- ggplot(troops, aes(x = long, y = lat, group = group)) + -->
-<!--   geom_path() -->
-<!-- ``` -->
-
-<!-- Plotando agora com o diferenciando a quantidade de sobreviventes pela espessura da linha e a direção pela cor: -->
-
-<!-- ```{r, fig.width=10, fig.height=2.5} -->
-<!-- ggplot(troops, aes(x = long, y = lat, group = group, -->
-<!--                    color = direction, size = survivors)) + -->
-<!--   geom_path(lineend = "round") -->
-<!-- ``` -->
-
-<!-- Vamos usar o `scale_size()` para transmitir melhor a quantidade de sobreviventes: -->
-
-<!-- ```{r, fig.width=10, fig.height=2.5} -->
-<!-- ggplot(troops, aes(x = long, y = lat, group = group, -->
-<!--                    color = direction, size = survivors)) + -->
-<!--   geom_path(lineend = "round") + -->
-<!--   scale_size(range = c(0.5, 15)) -->
-<!-- ``` -->
-
-<!-- Vamos remover a legendas e mudar as cores: -->
-
-<!-- ```{r, fig.width=10, fig.height=2.5} -->
-<!-- ggplot(troops, aes(x = long, y = lat, group = group, -->
-<!--                    color = direction, size = survivors)) + -->
-<!--   geom_path(lineend = "round") + -->
-<!--   scale_size(range = c(0.5, 15)) + -->
-<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
-<!--   labs(x = NULL, y = NULL) + -->
-<!--   guides(color = FALSE, size = FALSE) -->
-<!-- ``` -->
-
-<!-- Vamos então adicionar as cidades nas quais as tropas passaram no gráfico com o `geom_point()`: -->
-
-<!-- ```{r, fig.width=10, fig.height=2.5} -->
-<!-- ggplot() + -->
-<!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
-<!--                                color = direction, size = survivors), -->
-<!--             lineend = "round") + -->
-<!--   geom_point(data = cities, aes(x = long, y = lat)) + -->
-<!--   geom_text(data = cities, aes(x = long, y = lat, label = city), vjust = 1.5) + -->
-<!--   scale_size(range = c(0.5, 15)) + -->
-<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
-<!--   labs(x = NULL, y = NULL) + -->
-<!--   guides(color = FALSE, size = FALSE) -->
-<!-- ``` -->
-
-<!-- Como os nomes de algumas das cidades ficou em cima da linha preta, vamos utilizar o `geom_textrepel()` para resolver esse problema: -->
-
-<!-- ```{r, fig.width=10, fig.height=2.5, warning=FALSE} -->
-<!-- ggplot() + -->
-<!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
-<!--                                color = direction, size = survivors), -->
-<!--             lineend = "round") + -->
-<!--   geom_point(data = cities, aes(x = long, y = lat), -->
-<!--              color = "#DC5B44") + -->
-<!--   geom_text_repel(data = cities, aes(x = long, y = lat, label = city), -->
-<!--                   color = "#DC5B44") + -->
-<!--   scale_size(range = c(0.5, 15)) + -->
-<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
-<!--   labs(x = NULL, y = NULL) + -->
-<!--   guides(color = FALSE, size = FALSE) -->
-<!-- ``` -->
-
-<!-- Vamos agora começar o processo de adicionar um mapa no gráfico, para isso temos que baixar a imagem de fundo: -->
-
-<!-- ```{r, message=FALSE} -->
-<!-- march.1812.europe <- c(left = -13.10, bottom = 35.75, right = 41.04, top = 61.86) -->
-<!-- march.1812.europe.map <- get_stamenmap(bbox = march.1812.europe, zoom = 5, -->
-<!--                                        maptype = "terrain", where = "cache") -->
-<!-- march.1812.europe.map.wc <- get_stamenmap(bbox = march.1812.europe, zoom = 5, -->
-<!--                                           maptype = "watercolor", where = "cache") -->
-<!-- ``` -->
-
-<!-- Usando `ggmap` vamos adicionar o mapa de fundo: -->
-
-<!-- ```{r, fig.width=10, fig.height=6} -->
-<!-- ggmap(march.1812.europe.map.wc) + -->
-<!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
-<!--                                color = direction, size = survivors), -->
-<!--             lineend = "round") + -->
-<!--   scale_size(range = c(0.5, 5)) + -->
-<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
-<!--   guides(color = FALSE, size = FALSE) + -->
-<!--   theme_nothing() -->
-<!-- ``` -->
-
-<!-- Vamos agora dar um zoom no mapa para a região que queremos, mudar o tipo de mapa para "mapa de terreno" e então adicionar o resto dos elementos que já tinhamos: -->
-
-<!-- ```{r, message=FALSE, warning=FALSE, fig.width=10, fig.height=4} -->
-<!-- march.1812.ne.europe <- c(left = 23.5, bottom = 53.4, right = 38.1, top = 56.3) -->
-
-<!-- march.1812.ne.europe.map <- get_stamenmap(bbox = march.1812.ne.europe, zoom = 8, -->
-<!--                                           maptype = "terrain-background", where = "cache") -->
-
-<!-- march.1812.plot <- ggmap(march.1812.ne.europe.map) + -->
-<!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
-<!--                                color = direction, size = survivors), -->
-<!--             lineend = "round") + -->
-<!--   geom_point(data = cities, aes(x = long, y = lat), -->
-<!--              color = "#DC5B44") + -->
-<!--   geom_text_repel(data = cities, aes(x = long, y = lat, label = city), -->
-<!--                   color = "#DC5B44") + -->
-<!--   scale_size(range = c(0.5, 10)) + -->
-<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
-<!--   guides(color = FALSE, size = FALSE) + -->
-<!--   theme_nothing() -->
-
-<!-- march.1812.plot -->
-<!-- ``` -->
-
-<!-- Temos então a parte superior do gráfico final, vamos ao gráfico de temperaturas. -->
-
-<!-- Podemos facilmente gerá-lo com `geom_line()`: -->
-
-<!-- ```{r, fig.width=10, fig.height=4} -->
-<!-- ggplot(data = temps, aes(x = long, y = temp)) + -->
-<!--   geom_line() + -->
-<!--   geom_text(aes(label = temp), vjust = 1.5) -->
-<!-- ``` -->
-
-<!-- Melhorando as labels, removendo o grid vertical, movendo o eixo y para a direita e removendo as descrições do eixo x: -->
-
 <!-- ```{r, fig.width=10, fig.height=4, warning=FALSE} -->
+<!-- # Melhorando as labels. -->
 <!-- temps.nice <- temps %>% -->
 <!--   mutate(nice.label = paste0(temp, "°, ", month, ". ", day)) -->
-
-<!-- temps.1812.plot <- ggplot(data = temps.nice, aes(x = long, y = temp)) + -->
-<!--   geom_line() + -->
-<!--   geom_label(aes(label = nice.label), -->
-<!--              size = 2.5) + -->
-<!--   labs(x = NULL, y = "° Celsius") + -->
-<!--   scale_x_continuous(limits = ggplot_build(march.1812.plot)$layout$panel_ranges[[1]]$x.range) + -->
-<!--   scale_y_continuous(position = "right") + -->
-<!--   coord_cartesian(ylim = c(-35, 5)) +  # Add some space above/below -->
-<!--   theme(panel.grid.major.x = element_blank(), -->
-<!--         panel.grid.minor.x = element_blank(), -->
-<!--         panel.grid.minor.y = element_blank(), -->
-<!--         axis.text.x = element_blank(), axis.ticks = element_blank(), -->
-<!--         panel.border = element_blank()) -->
-
-<!-- temps.1812.plot -->
 <!-- ``` -->
 
-<!-- Tendo o gráfico de temperatura, vamos juntar os gráficos com `grid`: -->
-
-<!-- ```{r, warning=FALSE} -->
-<!-- both.1812.plot <- rbind(ggplotGrob(march.1812.plot), -->
-<!--                         ggplotGrob(temps.1812.plot), size="last") -->
-
-<!-- grid::grid.newpage() -->
-<!-- grid::grid.draw(both.1812.plot) -->
-<!-- ``` -->
-
-<!-- Os gráficos estão alinhados mas temos um problema com as proporções. Vamos resolver modificando manualmente os painéis. -->
-
-<!-- ```{r, fig.width=10, fig.height=5.5, warning=FALSE} -->
-<!-- # Identificando os paneis do gráfico -->
-<!-- panels <- both.1812.plot$layout$t[grep("panel", both.1812.plot$layout$name)] -->
-
-<!-- map.panel.height <- both.1812.plot$heights[panels][1] -->
-
-<!-- # Colocando os painéis no gráfico. -->
-<!-- both.1812.plot$heights[panels] <- unit(c(map.panel.height, 0.1), "null") -->
-
-<!-- grid::grid.newpage() -->
-<!-- grid::grid.draw(both.1812.plot) -->
-<!-- ``` -->
-
-<!-- Vamos gerar agora um gráfico sem o mapa de fundo. -->
+<!-- Gráfico: -->
 
 <!-- ```{r, fig.width=10, fig.height=4.75, warning=FALSE} -->
 
@@ -325,11 +158,12 @@ p
 <!--                                color = direction, size = survivors), -->
 <!--             lineend = "round") + -->
 <!--   geom_point(data = cities, aes(x = long, y = lat), -->
-<!--              color = "#DC5B44") + -->
+<!--              color = "black") + -->
 <!--   geom_text_repel(data = cities, aes(x = long, y = lat, label = city), -->
-<!--                   color = "#DC5B44") + -->
+<!--                   color = "black", -->
+<!--                   force = 10) + -->
 <!--   scale_size(range = c(0.5, 10)) + -->
-<!--   scale_colour_manual(values = c("#DFC17E", "#252523")) + -->
+<!--   scale_colour_manual(values = c("#d8b365", "#ca0020")) + -->
 <!--   guides(color = FALSE, size = FALSE) + -->
 <!--   theme_nothing() -->
 
@@ -363,7 +197,7 @@ p
 
 <!-- Pronto! -->
 
-<!-- # Problema 3: Gapminder -->
+# Problema 3: Gapminder
 
 <!-- Faça a animação presente em [https://towardsdatascience.com/how-to-build-animated-charts-like-hans-rosling-doing-it-all-in-r-570efc6ba382] seguindo os passos lá descritos. -->
 
@@ -394,7 +228,7 @@ p
 <!-- # Remove linhas vazias no final do dataframe -->
 <!-- lifeexp <- lifeexp[1:275,] -->
 <!-- population <- population[1:275,] -->
-<!-- # Transforma os dataframes trazendo os anos como coluna  -->
+<!-- # Transforma os dataframes trazendo os anos como coluna -->
 <!-- population_m <- melt(population, id=c("Country")) -->
 <!-- lifeexp_m <- melt(lifeexp, id=c("Country")) -->
 <!-- fertility_m <- melt(fertility, id=c("Country")) -->
@@ -460,23 +294,20 @@ p
 <!-- htmlwidgets::saveWidget(ggp, "index.html") -->
 <!-- ``` -->
 
-<!-- # Problema 4: Atirei o pau no gráfico -->
+# Problema 4: Atirei o pau no gráfico
 
 <!-- Assista o vídeo [https://www.youtube.com/watch?v=CJkzf4IZRuk] em que o autor realiza um gráfico em Excel. Seguindo os mesmos passos, faça esse gráfico em R. -->
 
 <!-- **Resposta:** -->
 
-<!-- Vamos começar importando a tabela baixada no painel oficial do covid e já criando um dataframe somente com os dados que usarei para replicar. -->
+<!-- Mantive o gráfico alterando somente o período representado. -->
 
-<!-- ```{r, warning=FALSE, error=FALSE} -->
-<!-- covid <- read.xlsx("./4/dados.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE) -->
-<!-- covid <- data.frame(date = covid$data, obitos = covid$obitosAcumulado) -->
+<!-- ```{r, warning=FALSE, error=FALSE, eval = FALSE} -->
+<!-- covid <- read_csv("./4/dados1.csv") -->
+<!-- covid <- data.frame(date = covid$data, obitos = covid$Obitos) -->
 <!-- ``` -->
 
-<!-- Como escrevi o código em um único chunk vou novamente comentar dentro desse chunk.  -->
-<!-- O primeiro diz respeito a gráfico dos 14 minutos, que representa a quantidade de óbitos em escala logarítmica. -->
-
-<!-- ```{r, warning = FALSE, message= FALSE} -->
+<!-- ```{r, warning = FALSE, message= FALSE, eval=FALSE} -->
 <!-- # Aqui é feita a remoção das linhas cujos número de óbitos é 0 e a criação de um vetor que auxiliará no cálculo da taxa. -->
 <!-- obitos <- covid$obitos -->
 <!-- obitos <- obitos[obitos != 0] -->
@@ -486,9 +317,9 @@ p
 <!-- taxa <- obitos / obitos_help -->
 <!-- taxa[taxa == Inf] <- 0 -->
 <!-- # Criação de um dataframe com as datas, os óbitos e as taxas já calculadas. -->
-<!-- full <- cbind(data.frame(obitos, taxa)[-c(58),], date = ymd(covid$date[covid$obitos != 0])) -->
+<!-- full <- cbind(data.frame(obitos, taxa)[-c(59),], date = ymd(covid$date[covid$obitos != 0])) -->
 <!-- # Filtragem desse dataframe para as datas utilizadas no video. -->
-<!-- newdf <- full[full$date >= "2020-03-27" & full$date <= "2020-04-14",] -->
+<!-- newdf <- full[full$taxa != 0] -->
 <!-- # Criação dos estilos a serem utilizados no gráfico, as listas a seguir dizem respeito respectivamente ao eixo principal(em escala logarítmica) que está ligado aos óbitos e ao eixo secundário(em escala linear) que está ligado a taxa de crescimento. -->
 <!-- style.atirei1y1 <- list( -->
 <!--   autotick = FALSE, -->
@@ -522,44 +353,44 @@ p
 <!-- atirei1 -->
 <!-- ``` -->
 
-<!-- Reconstrução da tabela de previsão de número de óbitos:  -->
+<!-- Na segunda parte vou fazer alterações na parte de manipulação e previsão de óbitos futuros. -->
+<!-- Na tabela de previsão: -->
 
-<!-- ```{r, warning = FALSE, message=FALSE} -->
-<!-- # Criando o vetor da soma acumulada dos desvios. -->
-<!-- media <- 1.1 -->
-<!-- somaaculmulada <- newdf$taxa - media -->
-<!-- # Plotando a soma e assim verificando a média. -->
-<!-- soma <- plot_ly(x = ~newdf$date) -->
-<!-- soma <- soma %>% add_trace(y = ~somaaculmulada, name = "Soma", mode = "lines+markers") -->
-<!-- soma <- soma %>% layout(yaxis = list(tick0 = -1, dtick = 0.1, ticklen = 1)) -->
-<!-- soma -->
-<!-- ``` -->
-
-<!-- Agora a tabela de previsão: -->
-
-<!-- ```{r} -->
-<!-- # Função para gerar a previsão dos óbitos com base na taxa de crescimento média -->
+<!-- ```{r, warning = FALSE, message= FALSE, eval=FALSE} -->
+<!-- # Função para gerar a previsão dos óbitos com base em taxas de crescimento aleatórias geradas a partir da função runif() que gera essas taxas em um determinado intervalo. -->
 <!-- simulacrescimento <- function(taxa, valor_inicial, dias){ -->
-<!--   sup <- c() -->
+<!--   sup <- c(valor_inicial) -->
 <!--   for(i in 1:dias){ -->
-<!--     sup <- c(sup, round(valor_inicial * (taxa ^ i))) -->
+<!--     sup <- c(sup, round(tail(sup, 1) * taxa[i])) -->
 <!--   } -->
 <!--   sup -->
 <!-- } -->
 <!-- # Preparando as datas a serem adicionadas no dataframe(restante do mês de abril) -->
-<!-- newdates <- seq(as.Date("2020-04-15"), as.Date("2020-04-30"), by="days") -->
+<!-- newdates <- seq(as.Date("2020-05-24"), as.Date("2020-06-30"), by="days") -->
 <!-- newdates <- c(newdf$date, newdates) -->
 <!-- # Contagem dos dias que foram adicionados -->
 <!-- diasadicionados <- length(newdates) - length(newdf$date) -->
-<!-- # Preparando as taxas a serem adicionadas no dataframe(supondo 1.1 no restante do mês de abril) -->
-<!-- taxa <-  rep(1.1, times = diasadicionados) -->
+<!-- # Preparando as taxas a serem adicionadas no dataframe(pegando valores aleatórios dentre o intervalo determinado. O porquê desse intervalo será explicado no final do documento) -->
+<!-- taxa <-  runif(diasadicionados, min = 1.02, max = 1.038) -->
 <!-- newtaxa <- c(newdf$taxa, taxa) -->
 <!-- # Criação do vetor com os óbitos já registrados e com a previsão. -->
-<!-- newobitos <- c(newdf$obitos, simulacrescimento(media, tail(newdf$obitos, n = 1), diasadicionados)) -->
+<!-- newobitos <- c(newdf$obitos, simulacrescimento(taxa, tail(newdf$obitos, n = 1), diasadicionados)[-39]) -->
 <!-- # União das novas unidades em um dataframe. -->
 <!-- tabela <- data.frame(Data = newdates, obitos = newobitos, taxa = newtaxa) -->
 
 <!-- knitr::kable(tabela) -->
+
+<!-- atirei1 <- plot_ly(x = ~tabela$Data) -->
+<!-- # Adicionando a linha de óbitos. -->
+<!-- atirei1 <- atirei1 %>% add_trace(y = ~tabela$obitos, name = "Óbitos", mode = "lines+markers", line = list(color = "#00868A", shape = "spline", width = 2)) -->
+<!-- # Adicionando a linha de taxa de crescimento e a ligando ao eixo secundário(yaxis = "y2"), assim a mesma se manterá em escala linear -->
+<!-- atirei1 <- atirei1 %>% add_trace(y =  ~tabela$taxa, name = "Taxa de crescimento", mode = "lines+markers", line = list(color = "#FF7119",width = 2),yaxis = "y2") -->
+<!-- # Aplicação dos estilos citados acima, adição do título, movimentação da legenda para a parte inferior. -->
+<!-- atirei1 <- atirei1 %>% layout(xaxis = list(title = ""),yaxis = style.atirei1y1, yaxis2 = style.atirei1y2, title = paste("Obitos COVID-19 no Brasil Previsão até 06/2020 com taxa constante de ", round(media, digits = 3)),legend = list(orientation = "h"), margin = list(r = 50)) -->
+<!-- # Exibição do gráfico -->
+<!-- atirei1 -->
 <!-- ``` -->
 
-<!-- A previsão feita diz 7039 óbitos até o final do mês de abril. Isso nos mostra que essa taxa na realidade abaixou de 1.1, no final de abril foram registrados pelas secretárias estaduais de saúde 5912 óbitos. -->
+<!-- ## O porquê do intervalo para a previsão -->
+
+<!-- Com o que foi observado nas taxas do últimos 10 dias, variando de 1.031 a 1.070, estimei um máximo dessa taxa em 1.038 e o mínimo de 1.020 visto que a taxa tende a diminuir como vemos no primeiro gráfico. Uma vez que os valores que obtive em múltiplas execuções do código ficaram com a média em torno dos 60 mil projetados pelo IHME(Instituto de Métrica da Universidade de Washington, nos Estados Unidos) e por outros estudos e segue a média de mil óbitos que estamos tendo por dia, acredito que essa forma de variar a taxa seja válida e uma alternativa a manter uma taxa fixa. Uma forma maximizar a precisão dessa previsão talvez fosse rodar o código múltiplas vezes e usar como valores as médias. Outras seria gerar um modelo para prever as taxas baseado nas taxas que tivemos anteriormente. -->
