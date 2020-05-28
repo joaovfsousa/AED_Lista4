@@ -25,7 +25,6 @@ library(RCurl)
 library(httr)
 library(reshape)
 library(gapminder)
-library(dplyr)
 library(gganimate)
 library(plotly)
 library(gifski)
@@ -34,95 +33,99 @@ library(grid)
 
 # Problema 1: The Economist
 
-<!-- Crie o último gráfico do link [https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html]. Este é um gráfico que apresenta uma relação entre o IDH x IPC entre diversos países. -->
+Crie o último gráfico do link [https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html]. Este é um gráfico que apresenta uma relação entre o IDH x IPC entre diversos países.
 
-<!-- **Resposta:** -->
+**Resposta:**
 
-<!-- Dados os conceitos passados nas últimas aulas, considerei válido alterar a escala de cor utilizando agora uma retirada do ColorBrewer com configurações divergentes. Considerei também retirar os países que estão sem as labels, visto que assim o gráfico fica menos poluído e aumenta a velocidade de interpretação do mesmo. -->
+Considerei também retirar os países que estão sem as labels, visto que assim o gráfico fica menos poluído e aumenta a velocidade de interpretação do mesmo.
 
-<!-- Primeiro então a importação dos dados e a manipulação. -->
+Primeiro então a importação dos dados e a manipulação.
 
-<!-- ```{r, fig.width=14, fig.height=10, warning=FALSE, message=FALSE} -->
-<!-- dat <- read_csv("./1/EconomistData.csv") -->
-<!-- pointsToLabel <- c("Russia", "Venezuela", "Iraq", "Myanmar", "Sudan", -->
-<!--                    "Afghanistan", "Congo", "Greece", "Argentina", "Brazil", -->
-<!--                    "India", "Italy", "China", "South Africa", "Spane", -->
-<!--                    "Botswana", "Cape Verde", "Bhutan", "Rwanda", "France", -->
-<!--                    "United States", "Germany", "Britain", "Barbados", "Norway", "Japan", -->
-<!--                    "New Zealand", "Singapore") -->
+```{r, fig.width=14, fig.height=10, warning=FALSE, message=FALSE}
+dat <- read_csv("./1/EconomistData.csv")
+pointsToLabel <- c("Russia", "Venezuela", "Iraq", "Myanmar", "Sudan",
+                   "Afghanistan", "Congo", "Greece", "Argentina", "Brazil",
+                   "India", "Italy", "China", "South Africa", "Spane",
+                   "Botswana", "Cape Verde", "Bhutan", "Rwanda", "France",
+                   "United States", "Germany", "Britain", "Barbados", "Norway", "Japan",
+                   "New Zealand", "Singapore")
 
-<!-- dat <- dat[dat$Country %in% pointsToLabel,] # Filtro dos países -->
+dat <- dat[dat$Country %in% pointsToLabel,] # Filtro dos países
 
-<!-- dat$Region <- factor(dat$Region, -->
-<!--                      levels = c("EU W. Europe", -->
-<!--                                 "Americas", -->
-<!--                                 "Asia Pacific", -->
-<!--                                 "East EU Cemt Asia", -->
-<!--                                 "MENA", -->
-<!--                                 "SSA"), -->
-<!--                      labels = c("OECD", -->
-<!--                                 "Americas", -->
-<!--                                 "Asia &\nOceania", -->
-<!--                                 "Central &\nEastern Europe", -->
-<!--                                 "Middle East &\nnorth Africa", -->
-<!--                                 "Sub-Saharan\nAfrica")) -->
+dat$Region <- factor(dat$Region,
+                     levels = c("EU W. Europe",
+                                "Americas",
+                                "Asia Pacific",
+                                "East EU Cemt Asia",
+                                "MENA",
+                                "SSA"),
+                     labels = c("OECD",
+                                "Americas",
+                                "Asia &\nOceania",
+                                "Central &\nEastern Europe",
+                                "Middle East &\nnorth Africa",
+                                "Sub-Saharan\nAfrica"))
 
-<!-- mR2 <- summary(lm(HDI ~ CPI + log(CPI), data = dat))$r.squared -->
-<!-- mR2 <- paste0(format(mR2, digits = 2), "%") -->
-<!-- ``` -->
+mR2 <- summary(lm(HDI ~ CPI + log(CPI), data = dat))$r.squared
+mR2 <- paste0(format(mR2, digits = 2), "%")
+```
 
-<!-- Aqui o código que gera o gráfico já com a nova paleta de cores. -->
+Aqui o código que gera o gráfico já com a nova paleta de cores.
 
-<!-- ```{r fig.height=10, fig.width=14, message=FALSE, warning=FALSE} -->
-<!-- newpalette <- c('#d73027','#fc8d59','#fee08b','#d9ef8b','#91cf60','#1a9850') -->
-<!-- #newpalette <- c('#d53e4f','#fc8d59','#fee08b','#e6f598','#99d594','#3288bd') -->
-<!-- p <- ggplot(dat, -->
-<!--             mapping = aes(x = CPI, y = HDI)) + -->
-<!--   geom_smooth(mapping = aes(linetype = "r2"), -->
-<!--               method = "lm", -->
-<!--               formula = y ~ x + log(x), se = FALSE, -->
-<!--               color = "red") + -->
-<!--   geom_point(mapping = aes(color = Region), -->
-<!--              shape = 1, -->
-<!--              size = 4, -->
-<!--              stroke = 1.5) + -->
-<!--   geom_text_repel(mapping = aes(label = Country), -->
-<!--                   data = transform(dat,labels = Country), -->
-<!--                   force = 4, -->
-<!--                   direction = c("both")) + -->
-<!--   scale_x_continuous(name = "Corruption Perception Index, 2011 (10=least corrupt)", -->
-<!--                      limits = c(1.0, 10.0), -->
-<!--                      breaks = 1:10) + -->
-<!--   scale_y_continuous(name = "Human Development Index, 2011 (1=best)", -->
-<!--                      limits = c(0.2, 1.0), -->
-<!--                      breaks = seq(0.2, 1.0, by = 0.1)) + -->
-<!--   scale_color_manual(name = "", -->
-<!--                      values = newpalette, -->
-<!--                      guide = guide_legend(nrow = 1, order=1)) + -->
-<!--   scale_alpha_discrete(range = c(0, 1), -->
-<!--                        guide = FALSE) + -->
+```{r fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+#newpalette <- c('#d73027','#fc8d59','#fee08b','#d9ef8b','#91cf60','#1a9850')
+#newpalette <- c('#d53e4f','#fc8d59','#fee08b','#e6f598','#99d594','#3288bd')
+p <- ggplot(dat,
+            mapping = aes(x = CPI, y = HDI)) +
+  geom_smooth(mapping = aes(linetype = "r2"),
+              method = "lm",
+              formula = y ~ x + log(x), se = FALSE,
+              color = "red") +
+  geom_point(mapping = aes(color = Region),
+             shape = 1,
+             size = 4,
+             stroke = 1.5) +
+  geom_text_repel(mapping = aes(label = Country),
+                  data = transform(dat,labels = Country),
+                  force = 4,
+                  direction = c("both")) +
+  scale_x_continuous(name = "Corruption Perception Index, 2011 (10=least corrupt)",
+                     limits = c(1.0, 10.0),
+                     breaks = 1:10) +
+  scale_y_continuous(name = "Human Development Index, 2011 (1=best)",
+                     limits = c(0.2, 1.0),
+                     breaks = seq(0.2, 1.0, by = 0.1)) +
+  scale_color_manual(name = "",
+                     values = newpalette,
+                     guide = guide_legend(nrow = 1, order=1)) +
+  scale_alpha_discrete(range = c(0, 1),
+                       guide = FALSE) +
 
-<!--   scale_linetype(name = "", -->
-<!--                  breaks = "r2", -->
-<!--                  labels = list(bquote(R^2==.(mR2))), -->
-<!--                  guide = guide_legend(override.aes = list(linetype = 1, size = 2, color = "red"), order=2)) + -->
-<!--   ggtitle("Corruption and human development") + -->
-<!--   labs(caption="Sources: Transparency International; UN Human Development Report") + -->
-<!--   theme_bw() + -->
-<!--   theme(panel.border = element_blank(), -->
-<!--         panel.grid = element_blank(), -->
-<!--         panel.grid.major.y = element_line(color = "gray"), -->
-<!--         text = element_text(color = "black"), -->
-<!--         axis.title.x = element_text(face="italic"), -->
-<!--         axis.title.y = element_text(face="italic"), -->
-<!--         legend.position = "top", -->
-<!--         legend.direction = "horizontal", -->
-<!--         legend.box = "horizontal", -->
-<!--         legend.text = element_text(size = 12), -->
-<!--         plot.caption = element_text(hjust=0), -->
-<!--         plot.title = element_text(size = 16, face = "bold")) -->
-<!-- p -->
-<!-- ``` -->
+  scale_linetype(name = "",
+                 breaks = "r2",
+                 labels = list(bquote(R^2==.(mR2))),
+                 guide = guide_legend(override.aes = list(linetype = 1, size = 2, color = "red"), order=2)) +
+  ggtitle("Corruption and human development") +
+  labs(caption="Sources: Transparency International; UN Human Development Report") +
+  theme_bw() +
+  theme(panel.border = element_blank(),
+        panel.grid = element_blank(),
+        panel.grid.major.y = element_line(color = "gray"),
+        text = element_text(color = "black"),
+        axis.title.x = element_text(face="italic"),
+        axis.title.y = element_text(face="italic"),
+        legend.position = "top",
+        legend.direction = "horizontal",
+        legend.box = "horizontal",
+        legend.text = element_text(size = 12),
+        plot.caption = element_text(hjust=0),
+        plot.title = element_text(size = 16, face = "bold"))
+p
+```
+
+```{r}
+
+```
 
 # Problema 2: Minard
 
@@ -143,6 +146,40 @@ library(grid)
 <!--   mutate(date = dmy(date)) -->
 <!-- ``` -->
 
+<!-- ```{r} -->
+<!-- normalize <- function(x) { -->
+<!--   ma <- max(x) -->
+<!--   mi <- min(x) -->
+<!--   return ((x-mi)/(ma - mi)) -->
+<!-- } -->
+<!-- tempa <- data.frame(long = temps$long, alpha = normalize(abs(temps$temp))) -->
+<!-- #View(troops$long[troops$direction == "R"]) -->
+<!-- gettheclosest <- function(x, y){ -->
+<!--   alpha <- c() -->
+<!--   for (i in x){ -->
+<!--     closest <- abs(i - y) -->
+<!--     index_in_closest <- match(min(closest), closest) -->
+<!--     alpha <- c(alpha, index_in_closest) -->
+<!--   } -->
+<!--   alpha -->
+<!-- } -->
+
+<!-- closestlongs <- gettheclosest(troops$long, temps$long) -->
+<!-- alpha <- c() -->
+
+<!-- for (i in 1:length(troops$long)) { -->
+<!--   if (troops[i, ]$direction == "A"){ -->
+<!--     alpha <- c(alpha, 1) -->
+<!--   } else { -->
+<!--     alpha <- c(alpha, tempa[closestlongs[i], 2]) -->
+<!--   } -->
+<!-- } -->
+
+<!-- troops <- cbind(troops, alpha) -->
+<!-- #View(troops) -->
+<!-- ``` -->
+
+
 <!-- ```{r, fig.width=10, fig.height=4, warning=FALSE} -->
 <!-- # Melhorando as labels. -->
 <!-- temps.nice <- temps %>% -->
@@ -152,18 +189,17 @@ library(grid)
 <!-- Gráfico: -->
 
 <!-- ```{r, fig.width=10, fig.height=4.75, warning=FALSE} -->
-
 <!-- march.1812.plot.simple <- ggplot() + -->
 <!--   geom_path(data = troops, aes(x = long, y = lat, group = group, -->
 <!--                                color = direction, size = survivors), -->
-<!--             lineend = "round") + -->
+<!--             lineend = "round", alpha = alpha) + -->
 <!--   geom_point(data = cities, aes(x = long, y = lat), -->
 <!--              color = "black") + -->
 <!--   geom_text_repel(data = cities, aes(x = long, y = lat, label = city), -->
 <!--                   color = "black", -->
 <!--                   force = 10) + -->
 <!--   scale_size(range = c(0.5, 10)) + -->
-<!--   scale_colour_manual(values = c("#d8b365", "#ca0020")) + -->
+<!--   scale_colour_manual(values = c("#AD9236", "#4059AD")) + -->
 <!--   guides(color = FALSE, size = FALSE) + -->
 <!--   theme_nothing() -->
 
@@ -195,104 +231,105 @@ library(grid)
 <!-- grid::grid.draw(both.1812.plot.simple) -->
 <!-- ``` -->
 
-<!-- Pronto! -->
+Pronto!
 
 # Problema 3: Gapminder
 
-<!-- Faça a animação presente em [https://towardsdatascience.com/how-to-build-animated-charts-like-hans-rosling-doing-it-all-in-r-570efc6ba382] seguindo os passos lá descritos. -->
+Faça a animação presente em [https://towardsdatascience.com/how-to-build-animated-charts-like-hans-rosling-doing-it-all-in-r-570efc6ba382] seguindo os passos lá descritos.
 
-<!-- **Resposta:** -->
+**Resposta:**
 
-<!-- Vamos começar lendo os dados baixados. -->
+Vamos começar lendo os dados baixados.
 
-<!-- ```{r, warning=FALSE} -->
-<!-- population_xls <- read.xlsx("./3/indicator gapminder population.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE) -->
-<!-- fertility_xls <- read.xlsx("./3/indicator undata total_fertility.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE) -->
-<!-- lifeexp_xls <- read.xlsx("./3/indicator life_expectancy_at_birth.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE) -->
-<!-- ``` -->
+```{r, warning=FALSE}
+population_xls <- read.xlsx("./3/indicator gapminder population.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
+fertility_xls <- read.xlsx("./3/indicator undata total_fertility.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
+lifeexp_xls <- read.xlsx("./3/indicator life_expectancy_at_birth.xlsx", encoding = "UTF-8",stringsAsFactors= F, sheetIndex = 1, as.data.frame = TRUE, header=TRUE)
+```
 
-<!-- Como os scripts passados são muito grandes, irei comentar sua execução dentro do código. -->
-<!-- Primeira parte, a manipulação dos dados. -->
+Como os scripts passados são muito grandes, irei comentar sua execução dentro do código.
+Primeira parte, a manipulação dos dados.
 
-<!-- ```{r} -->
-<!-- # Cria uma variável que será usada para filtrar os dados nas linhas a seguir -->
-<!-- myvars <- paste("X", 1962:2015, sep="") -->
-<!-- # Gera novos dataframes somente com os anos desejados. -->
-<!-- population <- population_xls[c('Total.population',myvars)] -->
-<!-- fertility <- fertility_xls[c('Total.fertility.rate',myvars)] -->
-<!-- lifeexp <- lifeexp_xls[c('Life.expectancy',myvars)] -->
-<!-- # Renomeia a primeira coluna dos dataframes com "Country" -->
-<!-- colnames(population)[1] <- "Country" -->
-<!-- colnames(fertility)[1] <- "Country" -->
-<!-- colnames(lifeexp)[1] <- "Country" -->
-<!-- # Remove linhas vazias no final do dataframe -->
-<!-- lifeexp <- lifeexp[1:275,] -->
-<!-- population <- population[1:275,] -->
-<!-- # Transforma os dataframes trazendo os anos como coluna -->
-<!-- population_m <- melt(population, id=c("Country")) -->
-<!-- lifeexp_m <- melt(lifeexp, id=c("Country")) -->
-<!-- fertility_m <- melt(fertility, id=c("Country")) -->
-<!-- # Renomeia a coluna que mantem os dados -->
-<!-- colnames(population_m)[3] <- "pop" -->
-<!-- colnames(lifeexp_m)[3] <- "life" -->
-<!-- colnames(fertility_m)[3] <- "fert" -->
-<!-- # Unifica os dataframes -->
-<!-- mydf <- merge(lifeexp_m, fertility_m, by=c("Country","variable"), header =T) -->
-<!-- mydf <- merge(mydf, population_m, by=c("Country","variable"), header =T) -->
-<!-- # Usando o gapminder para criar um lista com os continentes de cada país do dataframe -->
-<!-- continent <- gapminder %>% group_by(continent, country) %>% distinct(country, continent) -->
-<!-- continent <- data.frame(lapply(continent, as.character), stringsAsFactors=FALSE) -->
-<!-- colnames(continent)[1] <- "Country" -->
-<!-- # Retira os paises que não estão presentes na tabela de continentes -->
-<!-- mydf_filter <- mydf %>% filter(Country %in% unique(continent$Country)) -->
-<!-- # E finalmente adiciona a coluna continentes ao dataframe -->
-<!-- mydf_filter <- merge(mydf_filter, continent, by=c("Country"), header =T) -->
-<!-- #Remove as linhas com valores "N/A", retorna as strings para o formato "character" e converte os dados para o formato numérico. -->
-<!-- mydf_filter[is.na(mydf_filter)] <- 0 -->
-<!-- mydf_filter <- data.frame(lapply(mydf_filter, as.character), stringsAsFactors=FALSE) -->
-<!-- mydf_filter$variable <- as.integer(as.character(gsub("X","",mydf_filter$variable))) -->
-<!-- colnames(mydf_filter)[colnames(mydf_filter)=="variable"] <- "year" -->
-<!-- mydf_filter$pop <- round(as.numeric(as.character(mydf_filter$pop))/1000000,1) -->
-<!-- mydf_filter$fert <- as.numeric(as.character(mydf_filter$fert)) -->
-<!-- mydf_filter$life <- as.numeric(as.character(mydf_filter$life)) -->
-<!-- ``` -->
-<!-- Segunda parte, a criação do gráfico com o ggplot: -->
-<!-- ```{r, warning=FALSE} -->
-<!-- # Criação de um tema global para o ggplot -->
-<!-- theme_set(theme_grey()+ theme(legend.box.background = element_rect(),legend.box.margin = margin(6, 6, 6, 6)) ) -->
-<!-- # Cria um gráfico com o ano como frame , eixo x sendo a taxa de fertilidade, eixo y sendo a expectativa de vida e o tamanho dos pontos sendo o tamanho da população. Há também ajustes gráficos, como a configuração dos limites do eixo y. -->
-<!-- p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = year)) + -->
-<!--   labs(x="Fertility Rate", y = "Life expectancy at birth (years)", caption = "(Based on data from Hans Rosling - gapminder.com)", color = 'Continent',size = "Population (millions)") + -->
-<!--   ylim(30,100) + -->
-<!--   geom_point() + -->
-<!--   scale_color_brewer(type = 'div', palette = 'Spectral') + -->
-<!--   # Criação da animação definindo título, a unidade que determinara a transição de frames e a forma como será feita(linear). -->
-<!--   ggtitle("Year: {frame_time}") + -->
-<!--   transition_time(year) + -->
-<!--   ease_aes("linear") + -->
-<!--   enter_fade() + -->
-<!--   exit_fade() -->
-<!-- # Comando que gera a animação. -->
-<!-- animate(p, width = 900, height = 900, nframes = 100, fps = 8, end_pause = 32,renderer=gifski_renderer("save.gif")) -->
-<!-- ``` -->
+```{r}
+# Cria uma variável que será usada para filtrar os dados nas linhas a seguir
+myvars <- paste("X", 1962:2015, sep="")
+# Gera novos dataframes somente com os anos desejados.
+population <- population_xls[c('Total.population',myvars)]
+fertility <- fertility_xls[c('Total.fertility.rate',myvars)]
+lifeexp <- lifeexp_xls[c('Life.expectancy',myvars)]
+# Renomeia a primeira coluna dos dataframes com "Country"
+colnames(population)[1] <- "Country"
+colnames(fertility)[1] <- "Country"
+colnames(lifeexp)[1] <- "Country"
+# Remove linhas vazias no final do dataframe
+lifeexp <- lifeexp[1:275,]
+population <- population[1:275,]
+# Transforma os dataframes trazendo os anos como coluna
+population_m <- melt(population, id=c("Country"))
+lifeexp_m <- melt(lifeexp, id=c("Country"))
+fertility_m <- melt(fertility, id=c("Country"))
+# Renomeia a coluna que mantem os dados
+colnames(population_m)[3] <- "pop"
+colnames(lifeexp_m)[3] <- "life"
+colnames(fertility_m)[3] <- "fert"
+# Unifica os dataframes
+mydf <- merge(lifeexp_m, fertility_m, by=c("Country","variable"), header =T)
+mydf <- merge(mydf, population_m, by=c("Country","variable"), header =T)
+# Usando o gapminder para criar um lista com os continentes de cada país do dataframe
+continent <- gapminder %>% group_by(continent, country) %>% distinct(country, continent)
+continent <- data.frame(lapply(continent, as.character), stringsAsFactors=FALSE)
+colnames(continent)[1] <- "Country"
+# Retira os paises que não estão presentes na tabela de continentes
+mydf_filter <- mydf %>% filter(Country %in% unique(continent$Country))
+# E finalmente adiciona a coluna continentes ao dataframe
+mydf_filter <- merge(mydf_filter, continent, by=c("Country"), header =T)
+#Remove as linhas com valores "N/A", retorna as strings para o formato "character" e converte os dados para o formato numérico.
+mydf_filter[is.na(mydf_filter)] <- 0
+mydf_filter <- data.frame(lapply(mydf_filter, as.character), stringsAsFactors=FALSE)
+mydf_filter$variable <- as.integer(as.character(gsub("X","",mydf_filter$variable)))
+colnames(mydf_filter)[colnames(mydf_filter)=="variable"] <- "year"
+mydf_filter$pop <- round(as.numeric(as.character(mydf_filter$pop))/1000000,1)
+mydf_filter$fert <- as.numeric(as.character(mydf_filter$fert))
+mydf_filter$life <- as.numeric(as.character(mydf_filter$life))
+```
+Segunda parte, a criação do gráfico com o ggplot:
+```{r, warning=FALSE, eval=FALSE}
+# Criação de um tema global para o ggplot
+theme_set(theme_grey()+ theme(legend.box.background = element_rect(),legend.box.margin = margin(6, 6, 6, 6)) )
+# Cria um gráfico com o ano como frame , eixo x sendo a taxa de fertilidade, eixo y sendo a expectativa de vida e o tamanho dos pontos sendo o tamanho da população. Há também ajustes gráficos, como a configuração dos limites do eixo y.
+p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = year)) +
+  labs(x="Fertility Rate", y = "Life expectancy at birth (years)", caption = "(Based on data from Hans Rosling - gapminder.com)", color = 'Continent',size = "Population (millions)") +
+  ylim(30,100) +
+  geom_point() +
+  scale_color_brewer(type = 'div', palette = 'Spectral') +
+  # Criação da animação definindo título, a unidade que determinara a transição de frames e a forma como será feita(linear).
+  ggtitle("Year: {frame_time}") +
+  transition_time(year) +
+  ease_aes("linear") +
+  enter_fade() +
+  exit_fade()
+# Comando que gera a animação.
+animate(p, width = 900, height = 900, nframes = 100, fps = 8, end_pause = 32,renderer=gifski_renderer("save.gif"))
+```
 
-<!-- Agora criando o gráfico interativo com o `plotly`. -->
+Modificação:
 
-<!-- ```{r, warning=FALSE, message=FALSE} -->
-<!-- # A estrutura do gráfico é feita em ggplot, assim como no chunk acima -->
-<!-- p <- ggplot(mydf_filter, aes(fert, life, size = pop, color = continent, frame = year)) + -->
-<!--   geom_point()+ ylim(30,100)  + labs(x="Fertility Rate", y = "Life expectancy at birth (years)", color = 'Continent',size = "Population (millions)") + -->
-<!--   scale_color_brewer(type = 'div', palette = 'Spectral') -->
+```{r}
+data <- mydf_filter[mydf_filter$year %% 5 == 0,]
+ggplot(data, aes(x = year, y = life, size = pop, color = continent), alpha = fert) +
+  ylim(30,100) +
+  geom_point() +
+  scale_color_brewer(type = 'div', palette = 'Spectral') + 
+  labs(x="Year", y = "Life expectancy at birth (years)", caption = "(Based on data from Hans Rosling - gapminder.com)", color = 'Continent',size = "Population (millions)", alpha = "Fertility Rate")
+```
 
-<!-- # Utilizando o gráfico gerado acima, cria o interativo -->
+```{r}
+highest <- function(x){
+    
+}
+```
 
-<!-- ggp <- ggplotly(p, height = 900, width = 900) %>% -->
-<!--   animation_opts(frame = 100, -->
-<!--                  easing = "linear", -->
-<!--                  redraw = FALSE) -->
-<!-- ggp -->
-<!-- htmlwidgets::saveWidget(ggp, "index.html") -->
-<!-- ``` -->
+
 
 # Problema 4: Atirei o pau no gráfico
 
